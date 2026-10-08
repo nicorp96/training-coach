@@ -12,3 +12,7 @@ coverage/
 .DS_Store
 *.fit
 /tmp/
+
+# Next.js
+next-env.d.ts
+*.tsbuildinfo

@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;background:#F6F6F1;color:#1F211A;font-family:'Bricolage Grotesque',system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:#5C6B24}a:hover{color:#6E7F2E}input,select,textarea,button{font-family:inherit}input[type=date],input[type=time]{color-scheme:light}input::placeholder{color:#7A7C70}</style>
+</helmet>
+<div style="display:grid;grid-template-columns:208px minmax(0,1fr);min-height:100vh;background:#F6F6F1">
+<aside style="position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:32px;padding:24px 14px;border-right:1px solid #E4E4DA;background:#F0F0E8">
+<div style="display:flex;align-items:center;gap:10px;padding:0 10px">
+<div style="width:26px;height:26px;border-radius:7px;background:#5C6B24;display:grid;place-items:center;color:#FFFFFF;font-weight:700;font-size:15px">T</div>
+<div style="font-weight:700;font-size:20px;letter-spacing:-0.02em">Tempo</div>
+</div>
+<nav style="display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ nav }}" as="item" hint-placeholder-count="4">
+<button onClick="{{ item.onClick }}" style="display:flex;align-items:center;gap:10px;padding:10px 10px;border:0;border-radius:10px;background:{{ item.bg }};color:{{ item.color }};font-size:14.5px;font-weight:500;text-align:left;cursor:pointer"><span style="width:3px;height:16px;border-radius:2px;background:{{ item.bar }}"></span>{{ item.label }}</button>
+</sc-for>
+</nav>
+<div style="margin-top:auto;position:relative">
+<sc-if value="{{ profOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;bottom:64px;left:0;right:0;background:#FFFFFF;border:1px solid #DCDCD2;border-radius:14px;padding:6px;display:flex;flex-direction:column;gap:2px;box-shadow:0 16px 40px rgba(30,32,20,.14)">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F;padding:8px 10px 6px">Switch profile</div>
+<sc-for list="{{ profiles }}" as="p" hint-placeholder-count="3">
+<button onClick="{{ p.onClick }}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:0;border-radius:10px;background:{{ p.bg }};color:#1F211A;text-align:left;cursor:pointer" style-hover="background:#EEF0E2">
+<span style="width:30px;height:30px;border-radius:50%;background:{{ p.color }};color:#FFFFFF;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none">{{ p.initials }}</span>
+<span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:14px;font-weight:500">{{ p.name }}</span><span style="font-size:12px;color:#686A5F">{{ p.goal }}</span></span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+<button onClick="{{ toggleProf }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #E6E6DD;border-radius:12px;background:#FFFFFF;color:#1F211A;text-align:left;cursor:pointer" style-hover="border-color:#C6C7BA">
+<span style="width:34px;height:34px;border-radius:50%;background:{{ profile.color }};color:#FFFFFF;display:grid;place-items:center;font-size:13px;font-weight:600;flex:none">{{ profile.initials }}</span>
+<span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-size:14px;font-weight:500">{{ profile.name }}</span><span style="font-size:12px;color:#686A5F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ profile.goal }}</span></span>
+<span style="color:#686A5F;font-size:12px">⇅</span>
+</button>
+</div>
+</aside>
+<main style="padding:28px 32px 56px;min-width:0">
+<header style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:28px">
+<div style="min-width:0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">{{ eyebrow }}</div>
+<h1 style="margin:6px 0 0;font-size:36px;font-weight:600;letter-spacing:-0.03em;line-height:1.1">{{ title }}</h1>
+</div>
+<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7A7C70">Layout</span>
+<div style="display:flex;gap:2px;padding:3px;border:1px solid #E6E6DD;border-radius:10px;background:#F8F8F4">
+<sc-for list="{{ variants }}" as="v" hint-placeholder-count="3">
+<button onClick="{{ v.onClick }}" style="border:0;border-radius:7px;padding:6px 11px;font-size:13px;font-weight:500;background:{{ v.bg }};color:{{ v.color }};cursor:pointer">{{ v.label }}</button>
+</sc-for>
+</div>
+</div>
+<button onClick="{{ newTraining }}" style="background:#5C6B24;color:#FFFFFF;border:0;border-radius:10px;padding:10px 16px;font-weight:600;font-size:14px;cursor:pointer" style-hover="background:#6E7F2E">+ New training</button>
+</div>
+</header>
+
+<sc-if value="{{ sTodayFocus }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+<sc-if value="{{ hasFocus }}" hint-placeholder-val="{{ true }}">
+<section style="flex:1.7 1 460px;min-width:0;background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;overflow:hidden">
+<div style="padding:26px 28px 22px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F;text-transform:uppercase;letter-spacing:.06em;flex-wrap:wrap">
+<span style="width:8px;height:8px;border-radius:50%;background:{{ focus.color }}"></span><span style="color:{{ focus.color }}">{{ focus.typeLabel }}</span><span>·</span><span>{{ focus.time }}–{{ focus.end }}</span><span>·</span><span>{{ focus.dur }}</span><span style="margin-left:auto;font-size:11px;letter-spacing:.03em;text-transform:none;padding:3px 8px;border-radius:6px;background:{{ focus.srcBg }};color:{{ focus.srcColor }}">{{ focus.srcLong }}</span>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap">
+<h2 style="margin:0;font-size:42px;font-weight:600;letter-spacing:-0.035em;line-height:1.02;text-wrap:balance">{{ focus.title }}</h2>
+<button onClick="{{ focus.onComplete }}" style="background:{{ focus.btnBg }};color:{{ focus.btnColor }};border:1px solid #5C6B24;border-radius:10px;padding:10px 16px;font-weight:600;font-size:14px;cursor:pointer">{{ focus.completeLabel }}</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F"><span>{{ focus.progress }}</span><span>{{ focus.exCount }}</span></div>
+<div style="height:6px;border-radius:3px;background:#E6E6DD;overflow:hidden"><div style="height:100%;width:{{ focus.pct }};background:#5C6B24;transition:width .3s"></div></div>
+</div>
+<div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:#F3F5E9">
+<span style="width:28px;height:28px;border-radius:8px;background:#5C6B24;color:#FFFFFF;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none">C</span>
+<div style="display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#4A5620">Coach note</span><p style="margin:0;font-size:14.5px;line-height:1.45;color:#2F3129;text-wrap:pretty">{{ coachNote }}</p></div>
+</div>
+</div>
+<sc-for list="{{ focus.exs }}" as="e" hint-placeholder-count="5">
+<div onClick="{{ e.onToggle }}" style="display:grid;grid-template-columns:32px 26px minmax(0,1fr) auto 84px;gap:14px;align-items:center;padding:16px 28px;border-top:1px solid #E6E6DD;cursor:pointer" style-hover="background:#F3F4EC">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A7C70">{{ e.n }}</span>
+<span style="width:22px;height:22px;border-radius:6px;border:1.5px solid {{ e.checkBorder }};background:{{ e.checkBg }};color:#FFFFFF;display:grid;place-items:center;font-size:13px;font-weight:700">{{ e.checkMark }}</span>
+<div style="min-width:0"><div style="font-size:16px;font-weight:500;color:{{ e.nameColor }};text-decoration:{{ e.strike }}">{{ e.name }}</div><div style="font-size:13px;color:#686A5F;margin-top:2px">{{ e.muscles }}</div></div>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:15px">{{ e.rx }}</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#686A5F;text-align:right">{{ e.load }}</span>
+</div>
+</sc-for>
+<sc-if value="{{ focus.noEx }}" hint-placeholder-val="{{ false }}">
+<div style="padding:20px 28px 26px;border-top:1px solid #E6E6DD;font-size:16px;line-height:1.5;color:#43453C">{{ focus.note }}</div>
+</sc-if>
+</section>
+</sc-if>
+<sc-if value="{{ noFocus }}" hint-placeholder-val="{{ false }}">
+<section style="flex:1.7 1 460px;background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;padding:40px 28px;display:flex;flex-direction:column;gap:8px">
+<h2 style="margin:0;font-size:32px;font-weight:600;letter-spacing:-0.03em">Rest day</h2>
+<p style="margin:0;color:#686A5F;font-size:15px">Nothing planned. Recovery is part of the plan.</p>
+</section>
+</sc-if>
+<div style="flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<section style="background:#FFFFFF;border:1px solid #E6E6DD;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">Also today</div>
+<sc-for list="{{ others }}" as="o" hint-placeholder-count="1">
+<button onClick="{{ o.onSelect }}" style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #E6E6DD;border-radius:12px;background:#F8F8F4;color:#1F211A;text-align:left;cursor:pointer" style-hover="border-color:#C6C7BA">
+<span style="width:8px;height:8px;border-radius:50%;background:{{ o.color }};flex:none"></span>
+<span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-size:15px;font-weight:500">{{ o.title }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F">{{ o.time }} · {{ o.dur }}</span></span>
+<span style="color:#7A7C70">→</span>
+</button>
+</sc-for>
+<sc-if value="{{ noOthers }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;color:#686A5F">Nothing else planned.</div></sc-if>
+</section>
+<section style="background:#FFFFFF;border:1px solid #E6E6DD;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">This week</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F">{{ weekStat }}</span></div>
+<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">
+<sc-for list="{{ week }}" as="d" hint-placeholder-count="7">
+<button onClick="{{ d.onClick }}" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0 10px;border:1px solid {{ d.border }};border-radius:10px;background:{{ d.bg }};color:#1F211A;cursor:pointer">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#686A5F">{{ d.wd }}</span>
+<span style="font-size:16px;font-weight:600">{{ d.day }}</span>
+<span style="display:flex;gap:3px;height:6px"><sc-for list="{{ d.sessions }}" as="x"><span style="width:6px;height:6px;border-radius:50%;background:{{ x.color }};opacity:{{ x.op }}"></span></sc-for></span>
+</button>
+</sc-for>
+</div>
+</section>
+<section style="background:#5C6B24;color:#FFFFFF;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:4px">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase">Goal</div>
+<div style="display:flex;align-items:baseline;gap:10px;margin-top:6px"><span style="font-size:56px;font-weight:700;letter-spacing:-0.04em;line-height:1">{{ goal.days }}</span><span style="font-size:15px;font-weight:500">days to go</span></div>
+<div style="font-size:16px;font-weight:600;margin-top:6px">{{ goal.name }}</div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:12px">{{ goal.dateLabel }}</div>
+</section>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sTodayTimeline }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+<section style="flex:1 1 280px;min-width:0;background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;padding:20px 20px 20px 16px">
+<div style="position:relative;height:{{ tlHeight }}">
+<sc-for list="{{ hours }}" as="h" hint-placeholder-count="16">
+<div style="position:absolute;left:0;right:0;top:{{ h.top }};display:flex;align-items:flex-start;gap:10px"><span style="width:46px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A7C70;transform:translateY(-7px)">{{ h.label }}</span><span style="flex:1;height:1px;background:#EEF0E2"></span></div>
+</sc-for>
+<sc-for list="{{ blocks }}" as="b" hint-placeholder-count="2">
+<button onClick="{{ b.onSelect }}" style="position:absolute;left:58px;right:0;top:{{ b.top }};height:{{ b.height }};background:{{ b.tint }};border:1.5px solid {{ b.border }};border-radius:12px;padding:10px 12px;color:#1F211A;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px;overflow:hidden">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ b.color }};text-transform:uppercase;letter-spacing:.06em">{{ b.typeLabel }} · {{ b.time }} · {{ b.srcLabel }}</span>
+<span style="font-size:15px;font-weight:600">{{ b.title }}</span>
+<span style="font-size:12.5px;color:#686A5F">{{ b.dur }}</span>
+</button>
+</sc-for>
+<div style="position:absolute;left:50px;right:0;top:{{ nowTop }};display:flex;align-items:center;pointer-events:none"><span style="width:9px;height:9px;border-radius:50%;background:#5C6B24"></span><span style="flex:1;height:1.5px;background:#5C6B24"></span></div>
+</div>
+</section>
+<sc-if value="{{ hasFocus }}" hint-placeholder-val="{{ true }}">
+<section style="flex:1.4 1 400px;min-width:0;display:flex;flex-direction:column;gap:14px">
+<div style="background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ focus.color }};text-transform:uppercase;letter-spacing:.06em">{{ focus.typeLabel }} · {{ focus.time }}–{{ focus.end }}</span><h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-0.03em">{{ focus.title }}</h2><span style="align-self:flex-start;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3px 8px;border-radius:6px;background:{{ focus.srcBg }};color:{{ focus.srcColor }}">{{ focus.srcLong }}</span></div>
+<button onClick="{{ focus.onComplete }}" style="background:{{ focus.btnBg }};color:{{ focus.btnColor }};border:1px solid #5C6B24;border-radius:10px;padding:9px 14px;font-weight:600;font-size:13.5px;cursor:pointer">{{ focus.completeLabel }}</button>
+</div>
+<div style="display:flex;align-items:center;gap:12px"><div style="flex:1;height:6px;border-radius:3px;background:#E6E6DD;overflow:hidden"><div style="height:100%;width:{{ focus.pct }};background:#5C6B24;transition:width .3s"></div></div><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F">{{ focus.progress }}</span></div>
+<sc-if value="{{ focus.noEx }}" hint-placeholder-val="{{ false }}"><p style="margin:0;font-size:15px;line-height:1.5;color:#43453C">{{ focus.note }}</p></sc-if>
+</div>
+<sc-for list="{{ focus.exs }}" as="e" hint-placeholder-count="5">
+<div onClick="{{ e.onToggle }}" style="display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:16px;align-items:start;padding:18px 20px;background:#FFFFFF;border:1px solid #E6E6DD;border-radius:14px;cursor:pointer" style-hover="border-color:#C6C7BA">
+<span style="width:22px;height:22px;margin-top:2px;border-radius:6px;border:1.5px solid {{ e.checkBorder }};background:{{ e.checkBg }};color:#FFFFFF;display:grid;place-items:center;font-size:13px;font-weight:700">{{ e.checkMark }}</span>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:16px;font-weight:500;color:{{ e.nameColor }};text-decoration:{{ e.strike }}">{{ e.name }}</span><span style="font-size:13.5px;line-height:1.45;color:#686A5F;text-wrap:pretty">{{ e.cue }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'IBM Plex Mono',monospace;font-size:16px">{{ e.rx }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F">{{ e.load }}</span></div>
+</div>
+</sc-for>
+</section>
+</sc-if>
+<sc-if value="{{ noFocus }}" hint-placeholder-val="{{ false }}"><section style="flex:1.4 1 400px;background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;padding:32px 24px"><h2 style="margin:0;font-size:28px;font-weight:600">Rest day</h2></section></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ sTodayWeek }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="display:grid;grid-template-columns:repeat(7,minmax(118px,1fr));gap:8px;overflow-x:auto;padding-bottom:6px">
+<sc-for list="{{ week }}" as="d" hint-placeholder-count="7">
+<div style="display:flex;flex-direction:column;gap:8px;padding:12px 10px;min-height:150px;border:1px solid {{ d.border }};border-radius:14px;background:{{ d.bg }};min-width:0">
+<button onClick="{{ d.onClick }}" style="display:flex;align-items:baseline;justify-content:space-between;border:0;background:none;color:#1F211A;padding:0 2px;cursor:pointer"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#686A5F;text-transform:uppercase">{{ d.wd }}</span><span style="font-size:20px;font-weight:600">{{ d.day }}</span></button>
+<sc-for list="{{ d.sessions }}" as="x">
+<div style="display:flex;flex-direction:column;gap:3px;padding:8px;border-radius:9px;background:{{ x.tint }};opacity:{{ x.op }};min-width:0">
+<span style="display:flex;justify-content:space-between;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:10.5px"><span style="color:{{ x.color }}">{{ x.time }}</span><span style="color:{{ x.srcColor }}">{{ x.srcLabel }}</span></span>
+<span style="font-size:12.5px;font-weight:500;line-height:1.25;overflow-wrap:anywhere">{{ x.title }}</span>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{ hasFocus }}" hint-placeholder-val="{{ true }}">
+<section style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ focus.color }};text-transform:uppercase;letter-spacing:.06em">Today · {{ focus.typeLabel }} · {{ focus.time }} · {{ focus.dur }} · {{ focus.srcLong }}</span><h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-0.03em">{{ focus.title }}</h2></div>
+<div style="display:flex;align-items:center;gap:14px"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F">{{ focus.progress }}</span><button onClick="{{ focus.onComplete }}" style="background:{{ focus.btnBg }};color:{{ focus.btnColor }};border:1px solid #5C6B24;border-radius:10px;padding:9px 14px;font-weight:600;font-size:13.5px;cursor:pointer">{{ focus.completeLabel }}</button></div>
+</div>
+<sc-if value="{{ focus.noEx }}" hint-placeholder-val="{{ false }}"><p style="margin:0;font-size:15px;color:#43453C">{{ focus.note }}</p></sc-if>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px">
+<sc-for list="{{ focus.exs }}" as="e" hint-placeholder-count="5">
+<button onClick="{{ e.onToggle }}" style="display:flex;flex-direction:column;gap:14px;padding:18px;border:1.5px solid {{ e.cardBorder }};border-radius:16px;background:#FFFFFF;color:#1F211A;text-align:left;cursor:pointer;min-height:190px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A7C70">{{ e.n }}</span><span style="width:22px;height:22px;border-radius:6px;border:1.5px solid {{ e.checkBorder }};background:{{ e.checkBg }};color:#FFFFFF;display:grid;place-items:center;font-size:13px;font-weight:700">{{ e.checkMark }}</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:500;letter-spacing:-0.02em">{{ e.rx }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#686A5F">{{ e.load }}</span></div>
+<div style="margin-top:auto;display:flex;flex-direction:column;gap:2px"><span style="font-size:15.5px;font-weight:500;color:{{ e.nameColor }};text-decoration:{{ e.strike }}">{{ e.name }}</span><span style="font-size:12.5px;color:#686A5F">{{ e.muscles }}</span></div>
+</button>
+</sc-for>
+</div>
+</section>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ sCal }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+<div style="flex:3 1 560px;min-width:0;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7A7C70;margin-right:4px">Planned by</span>
+<sc-for list="{{ srcChips }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.onClick }}" style="display:flex;align-items:center;gap:7px;border:1px solid {{ c.border }};border-radius:999px;background:{{ c.bg }};color:{{ c.color }};padding:6px 12px;font-size:13px;cursor:pointer"><span style="width:7px;height:7px;border-radius:50%;background:{{ c.dot }}"></span>{{ c.label }}</button></sc-for>
+</div>
+<sc-if value="{{ sCalMonth }}" hint-placeholder-val="{{ true }}">
+<section style="background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;padding:18px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 4px">
+<h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.02em;white-space:nowrap">{{ monthLabel }}</h2>
+<div style="display:flex;gap:6px">
+<button onClick="{{ prevMonth }}" style="width:34px;height:34px;border:1px solid #D4D4C9;border-radius:9px;background:transparent;color:#1F211A;cursor:pointer">←</button>
+<button onClick="{{ goToday }}" style="height:34px;padding:0 12px;border:1px solid #D4D4C9;border-radius:9px;background:transparent;color:#1F211A;font-size:13px;cursor:pointer">Today</button>
+<button onClick="{{ nextMonth }}" style="width:34px;height:34px;border:1px solid #D4D4C9;border-radius:9px;background:transparent;color:#1F211A;cursor:pointer">→</button>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:6px">
+<sc-for list="{{ weekdays }}" as="w" hint-placeholder-count="7"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#7A7C70;padding:0 8px">{{ w }}</div></sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px">
+<sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
+<button onClick="{{ c.onClick }}" style="min-height:108px;min-width:0;display:flex;flex-direction:column;gap:5px;padding:7px;background:{{ c.bg }};border:1px solid {{ c.border }};border-radius:10px;opacity:{{ c.op }};text-align:left;color:#1F211A;cursor:pointer" style-hover="border-color:#C6C7BA">
+<span style="width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:{{ c.numBg }};color:{{ c.numColor }};font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:500">{{ c.day }}</span>
+<sc-for list="{{ c.sessions }}" as="x">
+<span style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 6px;border-radius:6px;background:{{ x.tint }};opacity:{{ x.op }};min-width:0"><span style="width:6px;height:6px;border-radius:50%;background:{{ x.color }};flex:none"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.title }}</span></span>
+</sc-for>
+</button>
+</sc-for>
+</div>
+</section>
+</sc-if>
+<sc-if value="{{ sCalWeek }}" hint-placeholder-val="{{ false }}">
+<section style="background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;padding:18px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:0 4px">
+<h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.02em">{{ weekLabel }}</h2>
+<div style="display:flex;gap:6px">
+<button onClick="{{ prevWeek }}" style="width:34px;height:34px;border:1px solid #D4D4C9;border-radius:9px;background:transparent;color:#1F211A;cursor:pointer">←</button>
+<button onClick="{{ goToday }}" style="height:34px;padding:0 12px;border:1px solid #D4D4C9;border-radius:9px;background:transparent;color:#1F211A;font-size:13px;cursor:pointer">Today</button>
+<button onClick="{{ nextWeek }}" style="width:34px;height:34px;border:1px solid #D4D4C9;border-radius:9px;background:transparent;color:#1F211A;cursor:pointer">→</button>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(7,minmax(118px,1fr));gap:8px;overflow-x:auto;padding-bottom:6px">
+<sc-for list="{{ weekCols }}" as="d" hint-placeholder-count="7">
+<div style="display:flex;flex-direction:column;gap:8px;min-width:0;min-height:420px;padding:10px 8px;border-radius:12px;border:1px solid {{ d.border }};background:{{ d.bg }}">
+<button onClick="{{ d.onClick }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:0;background:none;color:#1F211A;padding:2px 4px 6px;cursor:pointer"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#686A5F;text-transform:uppercase">{{ d.wd }}</span><span style="font-size:24px;font-weight:600;color:{{ d.numColor }}">{{ d.day }}</span></button>
+<sc-for list="{{ d.sessions }}" as="x">
+<button onClick="{{ d.onClick }}" style="display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:10px;border:1px solid #DCDCD2;background:#F8F8F4;opacity:{{ x.op }};color:#1F211A;text-align:left;cursor:pointer;min-width:0">
+<span style="display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:{{ x.color }};text-transform:uppercase"><span style="width:6px;height:6px;border-radius:50%;background:{{ x.color }}"></span>{{ x.time }}</span>
+<span style="font-size:13px;font-weight:500;line-height:1.25;overflow-wrap:anywhere">{{ x.title }}</span>
+<span style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:11.5px;color:#686A5F">{{ x.dur }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 6px;border-radius:5px;background:{{ x.srcBg }};color:{{ x.srcColor }}">{{ x.srcLabel }}</span></span>
+</button>
+</sc-for>
+<button onClick="{{ d.onAdd }}" style="margin-top:auto;border:1px dashed #D4D4C9;border-radius:9px;background:transparent;color:#686A5F;font-size:12.5px;padding:7px;cursor:pointer" style-hover="color:#5C6B24;border-color:#5C6B24">+ Add</button>
+</div>
+</sc-for>
+</div>
+</section>
+</sc-if>
+</div>
+<aside style="flex:1 1 280px;position:sticky;top:24px;background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">{{ sel.status }}</span><h3 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.02em">{{ sel.label }}</h3></div>
+<sc-for list="{{ sel.sessions }}" as="x" hint-placeholder-count="1">
+<div style="display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid #E6E6DD;border-radius:12px;background:#F8F8F4">
+<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><span style="display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ x.color }};text-transform:uppercase;letter-spacing:.05em"><span style="width:7px;height:7px;border-radius:50%;background:{{ x.color }}"></span>{{ x.typeLabel }} · {{ x.time }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#686A5F">{{ x.statusLabel }}</span></div>
+<div style="font-size:16px;font-weight:600">{{ x.title }}</div><span style="align-self:flex-start;font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2px 7px;border-radius:5px;background:{{ x.srcBg }};color:{{ x.srcColor }}">{{ x.srcLong }}</span>
+<sc-if value="{{ x.noEx }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#686A5F;line-height:1.45">{{ x.dur }} · {{ x.note }}</div></sc-if>
+<sc-for list="{{ x.exs }}" as="e"><div style="display:flex;justify-content:space-between;gap:10px;font-size:13px"><span style="color:#43453C">{{ e.name }}</span><span style="font-family:'IBM Plex Mono',monospace;color:#686A5F;white-space:nowrap">{{ e.rx }}</span></div></sc-for>
+</div>
+</sc-for>
+<sc-if value="{{ sel.empty }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;color:#686A5F">No training planned.</div></sc-if>
+<button onClick="{{ sel.onAdd }}" style="border:1px solid #D4D4C9;border-radius:10px;background:transparent;color:#1F211A;padding:10px;font-size:14px;font-weight:500;cursor:pointer" style-hover="border-color:#5C6B24;color:#5C6B24">+ Add training to this day</button>
+</aside>
+</div>
+</sc-if>
+
+<sc-if value="{{ sBuild }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+<sc-for list="{{ startOpts }}" as="o" hint-placeholder-count="3">
+<button onClick="{{ o.onClick }}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid {{ o.border }};border-radius:14px;background:{{ o.bg }};color:#1F211A;text-align:left;cursor:pointer"><span style="width:14px;height:14px;border-radius:50%;border:4px solid {{ o.dot }};flex:none"></span><span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">{{ o.label }}</span><span style="font-size:12.5px;color:#686A5F">{{ o.desc }}</span></span></button>
+</sc-for>
+</div>
+<sc-if value="{{ startPast }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+<sc-for list="{{ pastPlans }}" as="p" hint-placeholder-count="6">
+<div style="display:flex;flex-direction:column;gap:8px;padding:16px;border:1.5px solid {{ p.border }};border-radius:14px;background:#FFFFFF">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E5A35">{{ p.meta }}</span>
+<span style="font-size:16px;font-weight:600">{{ p.title }}</span>
+<span style="font-size:12.5px;line-height:1.4;color:#686A5F">{{ p.list }}</span>
+<button onClick="{{ p.onUse }}" style="margin-top:auto;align-self:flex-start;border:1px solid {{ p.border }};border-radius:8px;background:{{ p.useBg }};color:{{ p.useColor }};padding:6px 12px;font-size:13px;font-weight:500;cursor:pointer">{{ p.useLabel }}</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ startCoach }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+<sc-for list="{{ coachPlans }}" as="p" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:8px;padding:16px;border:1.5px solid {{ p.border }};border-radius:14px;background:#F3F5E9">
+<span style="display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ p.color }};text-transform:uppercase;letter-spacing:.05em"><span style="width:7px;height:7px;border-radius:50%;background:{{ p.color }}"></span>{{ p.typeLabel }} · {{ p.meta }}</span>
+<span style="font-size:16px;font-weight:600">{{ p.title }}</span>
+<span style="font-size:13px;line-height:1.45;color:#43453C;text-wrap:pretty">{{ p.why }}</span>
+<button onClick="{{ p.onUse }}" style="margin-top:auto;align-self:flex-start;border:1px solid {{ p.border }};border-radius:8px;background:{{ p.useBg }};color:{{ p.useColor }};padding:6px 12px;font-size:13px;font-weight:500;cursor:pointer">{{ p.useLabel }}</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ sBuildForm }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+<section style="flex:1.5 1 580px;min-width:0;background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;overflow:hidden">
+<div style="padding:24px;display:flex;flex-direction:column;gap:18px">
+<input value="{{ draft.title }}" onChange="{{ draft.onTitle }}" placeholder="Training name" style="width:100%;background:transparent;border:0;border-bottom:1px solid #DCDCD2;color:#1F211A;font-size:28px;font-weight:600;letter-spacing:-0.02em;padding:4px 0 12px;outline:none">
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">Type</span>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{ typeOpts }}" as="t" hint-placeholder-count="4">
+<button onClick="{{ t.onClick }}" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border:1.5px solid {{ t.border }};border-radius:999px;background:{{ t.bg }};color:#1F211A;font-size:13.5px;font-weight:500;cursor:pointer"><span style="width:8px;height:8px;border-radius:50%;background:{{ t.color }}"></span>{{ t.label }}</button>
+</sc-for>
+</div></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">Date</span><input type="date" value="{{ draft.date }}" onChange="{{ draft.onDate }}" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:10px 12px;font-size:14px"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">Start</span><input type="time" value="{{ draft.time }}" onChange="{{ draft.onTime }}" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:10px 12px;font-size:14px"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">Minutes</span><input type="number" value="{{ draft.dur }}" onChange="{{ draft.onDur }}" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:10px 12px;font-size:14px"></label>
+</div>
+<sc-if value="{{ isEndur }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">Distance (km)</span><input type="number" value="{{ distVal }}" onChange="{{ onDist }}" placeholder="e.g. 12" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:10px 12px;font-size:14px"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">Target</span><input value="{{ targetVal }}" onChange="{{ onTarget }}" placeholder="{{ targetPh }}" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:10px 12px;font-size:14px"></label>
+</div>
+</sc-if>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:14px 24px;border-top:1px solid #E6E6DD;background:#F8F8F4"><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">Exercises</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F">{{ draft.count }}</span></div>
+<sc-for list="{{ draft.rows }}" as="r" hint-placeholder-count="0">
+<div style="display:grid;grid-template-columns:24px minmax(120px,1fr) auto 84px 88px 28px;gap:12px;align-items:center;padding:12px 24px;border-top:1px solid #E6E6DD">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A7C70">{{ r.n }}</span>
+<div style="min-width:0"><div style="font-size:15px;font-weight:500">{{ r.name }}</div><div style="font-size:12.5px;color:#686A5F">{{ r.group }}</div></div>
+<div style="display:flex;align-items:center;border:1px solid #DCDCD2;border-radius:9px;overflow:hidden"><button onClick="{{ r.decS }}" style="width:28px;height:32px;border:0;background:#FFFFFF;color:#686A5F;cursor:pointer">−</button><span style="min-width:44px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px">{{ r.sets }} sets</span><button onClick="{{ r.incS }}" style="width:28px;height:32px;border:0;background:#FFFFFF;color:#686A5F;cursor:pointer">+</button></div>
+<input value="{{ r.reps }}" onChange="{{ r.onReps }}" style="min-width:0;background:#FFFFFF;border:1px solid #DCDCD2;border-radius:9px;color:#1F211A;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:13px">
+<input value="{{ r.load }}" onChange="{{ r.onLoad }}" style="min-width:0;background:#FFFFFF;border:1px solid #DCDCD2;border-radius:9px;color:#1F211A;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:13px">
+<button onClick="{{ r.remove }}" style="width:28px;height:28px;border:0;border-radius:7px;background:transparent;color:#7A7C70;font-size:16px;cursor:pointer" style-hover="color:#C2562B">×</button>
+</div>
+</sc-for>
+<sc-if value="{{ draft.noRows }}" hint-placeholder-val="{{ true }}"><div style="padding:28px 24px;border-top:1px solid #E6E6DD;font-size:14px;color:#686A5F">Add exercises from the library.</div></sc-if>
+<div style="display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid #E6E6DD">
+<button onClick="{{ reset }}" style="border:1px solid #D4D4C9;border-radius:10px;background:transparent;color:#1F211A;padding:10px 16px;font-size:14px;cursor:pointer">Clear</button>
+<button onClick="{{ save }}" style="background:#5C6B24;color:#FFFFFF;border:0;border-radius:10px;padding:10px 18px;font-weight:600;font-size:14px;cursor:pointer" style-hover="background:#6E7F2E">Save training</button>
+</div>
+</section>
+<section style="flex:1 1 300px;min-width:0;position:sticky;top:24px;background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:12px">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:#686A5F">Exercise library</span>
+<input value="{{ q }}" onChange="{{ onQ }}" placeholder="Search exercises" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:10px 12px;font-size:14px">
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<sc-for list="{{ grpChips }}" as="g" hint-placeholder-count="8"><button onClick="{{ g.onClick }}" style="border:1px solid {{ g.border }};border-radius:999px;background:{{ g.bg }};color:{{ g.color }};padding:5px 11px;font-size:12.5px;cursor:pointer">{{ g.label }}</button></sc-for>
+</div>
+<div style="display:flex;flex-direction:column;max-height:520px;overflow:auto;margin:0 -8px">
+<sc-for list="{{ picker }}" as="p" hint-placeholder-count="8">
+<div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:10px" style-hover="background:#F3F4EC">
+<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;font-size:14.5px;font-weight:500">{{ p.name }}<sc-if value="{{ p.rec }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5C6B24;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">For you</span></sc-if></div><div style="font-size:12.5px;color:#686A5F">{{ p.group }} · {{ p.equip }}</div></div>
+<button onClick="{{ p.onAdd }}" style="border:1px solid {{ p.addBorder }};border-radius:8px;background:{{ p.addBg }};color:{{ p.addColor }};padding:6px 10px;font-size:12.5px;font-weight:500;cursor:pointer">{{ p.addLabel }}</button>
+</div>
+</sc-for>
+</div>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{ sBuildGuided }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:880px;display:flex;flex-direction:column;gap:20px">
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+<sc-for list="{{ steps }}" as="st" hint-placeholder-count="3">
+<button onClick="{{ st.onClick }}" style="display:flex;flex-direction:column;gap:8px;border:0;background:none;color:{{ st.color }};text-align:left;padding:0;cursor:pointer"><span style="height:4px;border-radius:2px;background:{{ st.bar }}"></span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase">{{ st.n }} · {{ st.label }}</span></button>
+</sc-for>
+</div>
+<section style="background:#FFFFFF;border:1px solid #E6E6DD;border-radius:18px;padding:28px;display:flex;flex-direction:column;gap:22px">
+<sc-if value="{{ step1 }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:22px">
+<label style="display:flex;flex-direction:column;gap:8px"><span style="font-size:15px;color:#686A5F">What do you want to call it?</span><input value="{{ draft.title }}" onChange="{{ draft.onTitle }}" placeholder="e.g. Lower body strength" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:12px;color:#1F211A;padding:14px 16px;font-size:20px;font-weight:500"></label>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:15px;color:#686A5F">What kind of training?</span>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+<sc-for list="{{ typeOpts }}" as="t" hint-placeholder-count="4">
+<button onClick="{{ t.onClick }}" style="display:flex;flex-direction:column;gap:22px;padding:16px;border:1.5px solid {{ t.border }};border-radius:14px;background:{{ t.bg }};color:#1F211A;text-align:left;cursor:pointer;min-height:120px"><span style="width:12px;height:12px;border-radius:50%;background:{{ t.color }}"></span><span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:16px;font-weight:600">{{ t.label }}</span><span style="font-size:12.5px;color:#686A5F">{{ t.desc }}</span></span></button>
+</sc-for>
+</div></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;color:#686A5F">Date</span><input type="date" value="{{ draft.date }}" onChange="{{ draft.onDate }}" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:11px 12px;font-size:15px"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;color:#686A5F">Start</span><input type="time" value="{{ draft.time }}" onChange="{{ draft.onTime }}" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:11px 12px;font-size:15px"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;color:#686A5F">Minutes</span><input type="number" value="{{ draft.dur }}" onChange="{{ draft.onDur }}" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:11px 12px;font-size:15px"></label>
+</div>
+<sc-if value="{{ isEndur }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;color:#686A5F">Distance (km)</span><input type="number" value="{{ distVal }}" onChange="{{ onDist }}" placeholder="e.g. 12" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:11px 12px;font-size:15px"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;color:#686A5F">Target pace or power</span><input value="{{ targetVal }}" onChange="{{ onTarget }}" placeholder="{{ targetPh }}" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:11px 12px;font-size:15px"></label>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ step2 }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px">
+<div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+<span style="font-size:15px;color:#686A5F">Pick exercises</span>
+<input value="{{ q }}" onChange="{{ onQ }}" placeholder="Search exercises" style="background:#FFFFFF;border:1px solid #DCDCD2;border-radius:10px;color:#1F211A;padding:10px 12px;font-size:14px">
+<div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ grpChips }}" as="g" hint-placeholder-count="8"><button onClick="{{ g.onClick }}" style="border:1px solid {{ g.border }};border-radius:999px;background:{{ g.bg }};color:{{ g.color }};padding:5px 11px;font-size:12.5px;cursor:pointer">{{ g.label }}</button></sc-for></div>
+<div style="display:flex;flex-direction:column;max-height:380px;overflow:auto;margin:0 -8px">
+<sc-for list="{{ picker }}" as="p" hint-placeholder-count="8">
+<button onClick="{{ p.onAdd }}" style="display:flex;align-items:center;gap:10px;padding:10px 8px;border:0;border-radius:10px;background:transparent;color:#1F211A;text-align:left;cursor:pointer" style-hover="background:#F3F4EC">
+<span style="width:20px;height:20px;border-radius:6px;border:1.5px solid {{ p.addBorder }};background:{{ p.checkBg }};color:#FFFFFF;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none">{{ p.checkMark }}</span>
+<span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14.5px;font-weight:500">{{ p.name }}</span><span style="font-size:12.5px;color:#686A5F">{{ p.group }} · {{ p.equip }}</span></span>
+<sc-if value="{{ p.rec }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5C6B24;text-transform:uppercase">For you</span></sc-if>
+</button>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+<div style="display:flex;justify-content:space-between"><span style="font-size:15px;color:#686A5F">Your session</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F">{{ draft.count }}</span></div>
+<sc-for list="{{ draft.rows }}" as="r" hint-placeholder-count="0">
+<div style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid #E6E6DD;border-radius:12px;background:#F8F8F4">
+<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><span style="font-size:14.5px;font-weight:500">{{ r.name }}</span><button onClick="{{ r.remove }}" style="border:0;background:none;color:#7A7C70;font-size:16px;cursor:pointer" style-hover="color:#C2562B">×</button></div>
+<div style="display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr);gap:8px">
+<div style="display:flex;align-items:center;border:1px solid #DCDCD2;border-radius:9px;overflow:hidden"><button onClick="{{ r.decS }}" style="width:26px;height:32px;border:0;background:#FFFFFF;color:#686A5F;cursor:pointer">−</button><span style="min-width:40px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px">{{ r.sets }} sets</span><button onClick="{{ r.incS }}" style="width:26px;height:32px;border:0;background:#FFFFFF;color:#686A5F;cursor:pointer">+</button></div>
+<input value="{{ r.reps }}" onChange="{{ r.onReps }}" style="min-width:0;background:#FFFFFF;border:1px solid #DCDCD2;border-radius:9px;color:#1F211A;padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:12.5px">
+<input value="{{ r.load }}" onChange="{{ r.onLoad }}" style="min-width:0;background:#FFFFFF;border:1px solid #DCDCD2;border-radius:9px;color:#1F211A;padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:12.5px">
+</div>
+</div>
+</sc-for>
+<sc-if value="{{ draft.noRows }}" hint-placeholder-val="{{ true }}"><div style="padding:24px;border:1px dashed #D4D4C9;border-radius:12px;font-size:14px;color:#686A5F;text-align:center">Nothing added yet.</div></sc-if>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ step3 }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ review.color }};text-transform:uppercase;letter-spacing:.06em">{{ review.typeLabel }} · {{ review.dateLabel }} · {{ review.time }}–{{ review.end }}</span><h2 style="margin:0;font-size:34px;font-weight:600;letter-spacing:-0.03em">{{ review.title }}</h2></div>
+<div style="display:flex;flex-direction:column;border:1px solid #E6E6DD;border-radius:12px;overflow:hidden">
+<sc-for list="{{ review.exs }}" as="e"><div style="display:grid;grid-template-columns:32px minmax(0,1fr) auto 90px;gap:12px;padding:12px 16px;border-bottom:1px solid #E6E6DD;align-items:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A7C70">{{ e.n }}</span><span style="font-size:15px">{{ e.name }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ e.rx }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#686A5F;text-align:right">{{ e.load }}</span></div></sc-for>
+<sc-if value="{{ review.noEx }}"><div style="padding:14px 16px;font-size:14px;color:#686A5F">{{ review.dur }} · no exercises added</div></sc-if>
+</div>
+</div>
+</sc-if>
+<div style="display:flex;justify-content:space-between;gap:10px;padding-top:18px;border-top:1px solid #E6E6DD">
+<button onClick="{{ back }}" style="border:1px solid #D4D4C9;border-radius:10px;background:transparent;color:{{ backColor }};padding:10px 16px;font-size:14px;cursor:pointer">Back</button>
+<sc-if value="{{ notStep3 }}" hint-placeholder-val="{{ true }}"><button onClick="{{ next }}" style="background:#1F211A;color:#FFFFFF;border:0;border-radius:10px;padding:10px 18px;font-weight:600;font-size:14px;cursor:pointer">Continue →</button></sc-if>
+<sc-if value="{{ step3 }}" hint-placeholder-val="{{ false }}"><button onClick="{{ save }}" style="background:#5C6B24;color:#FFFFFF;border:0;border-radius:10px;padding:10px 18px;font-weight:600;font-size:14px;cursor:pointer" style-hover="background:#6E7F2E">Save training</button></sc-if>
+</div>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{ sLibGrid }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:28px">
+<section style="border:1px solid #D5DBBE;background:#F3F5E9;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:640px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:#5C6B24">Recommended for {{ first }}</span><p style="margin:0;font-size:17px;line-height:1.45;color:#1F211A;text-wrap:pretty">{{ recNote }}</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">
+<sc-for list="{{ recCards }}" as="x" hint-placeholder-count="6">
+<div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #E6E6DD;border-radius:12px;background:#FFFFFF">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:500">{{ x.name }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F">{{ x.rx }} · {{ x.load }}</span></div>
+<button onClick="{{ x.onAdd }}" style="border:1px solid {{ x.addBorder }};border-radius:8px;background:{{ x.addBg }};color:{{ x.addColor }};padding:6px 10px;font-size:12.5px;font-weight:500;cursor:pointer">{{ x.addLabel }}</button>
+</div>
+</sc-for>
+</div>
+</section>
+<section style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ grpChips }}" as="g" hint-placeholder-count="8"><button onClick="{{ g.onClick }}" style="border:1px solid {{ g.border }};border-radius:999px;background:{{ g.bg }};color:{{ g.color }};padding:6px 13px;font-size:13px;cursor:pointer">{{ g.label }}</button></sc-for></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px">
+<sc-for list="{{ libCards }}" as="x" hint-placeholder-count="9">
+<div style="display:flex;flex-direction:column;gap:12px;padding:18px;border:1px solid #E6E6DD;border-radius:16px;background:#FFFFFF;min-height:220px">
+<div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#686A5F"><span>{{ x.group }}</span><span>{{ x.level }}</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:19px;font-weight:600;letter-spacing:-0.01em">{{ x.name }}</span><span style="font-size:13px;color:#686A5F">{{ x.muscles }} · {{ x.equip }}</span></div>
+<p style="margin:0;font-size:13.5px;line-height:1.45;color:#43453C;text-wrap:pretty">{{ x.cue }}</p>
+<div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #E6E6DD"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px">{{ x.rx }} <span style="color:#686A5F">· {{ x.load }}</span></span><button onClick="{{ x.onAdd }}" style="border:1px solid {{ x.addBorder }};border-radius:8px;background:{{ x.addBg }};color:{{ x.addColor }};padding:6px 10px;font-size:12.5px;font-weight:500;cursor:pointer">{{ x.addLabel }}</button></div>
+</div>
+</sc-for>
+</div>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{ sLibGroups }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:20px;align-items:start">
+<nav style="position:sticky;top:24px;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="7">
+<button onClick="{{ g.onClick }}" style="display:flex;justify-content:space-between;align-items:baseline;padding:12px 14px;border:0;border-radius:12px;background:{{ g.bg }};color:{{ g.color }};font-size:18px;font-weight:600;letter-spacing:-0.01em;text-align:left;cursor:pointer"><span>{{ g.label }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:400;color:#686A5F">{{ g.count }}</span></button>
+</sc-for>
+</nav>
+<section style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px"><h2 style="margin:0;font-size:44px;font-weight:700;letter-spacing:-0.04em">{{ libGrpLabel }}</h2><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5C6B24">{{ libGrpRec }}</span></div>
+<sc-for list="{{ groupEx }}" as="x" hint-placeholder-count="4">
+<div style="display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;padding:20px 22px;border:1px solid {{ x.border }};border-radius:16px;background:#FFFFFF">
+<div style="flex:1 1 260px;display:flex;flex-direction:column;gap:6px;min-width:0">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:19px;font-weight:600">{{ x.name }}</span><sc-if value="{{ x.rec }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#FFFFFF;background:#5C6B24;border-radius:5px;padding:2px 6px;text-transform:uppercase;letter-spacing:.04em">For you</span></sc-if></div>
+<span style="font-size:13px;color:#686A5F">{{ x.muscles }} · {{ x.equip }} · {{ x.level }}</span>
+<p style="margin:4px 0 0;font-size:14px;line-height:1.5;color:#43453C;max-width:560px;text-wrap:pretty">{{ x.cue }}</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'IBM Plex Mono',monospace;font-size:20px">{{ x.rx }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F">{{ x.load }}</span></div>
+<button onClick="{{ x.onAdd }}" style="border:1px solid {{ x.addBorder }};border-radius:9px;background:{{ x.addBg }};color:{{ x.addColor }};padding:8px 12px;font-size:13px;font-weight:500;cursor:pointer">{{ x.addLabel }}</button>
+</div>
+</sc-for>
+</section>
+</div>
+</sc-if>
+<sc-if value="{{ sSet }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:32px;max-width:1080px">
+<section style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.02em">Devices &amp; apps</h2><span style="font-size:14px;color:#686A5F">Import finished activities and send planned workouts to your watch or bike computer.</span></div><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#686A5F">{{ connSummary }}</span></div>
+<sc-if value="{{ sSetCards }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px">
+<sc-for list="{{ devices }}" as="d" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:16px;padding:20px;border:1.5px solid {{ d.border }};border-radius:16px;background:#FFFFFF">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:12px;background:#1F211A;color:#FFFFFF;display:grid;place-items:center;font-size:18px;font-weight:700;flex:none">{{ d.mark }}</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:17px;font-weight:600">{{ d.name }}</span><span style="font-size:12.5px;color:#686A5F">{{ d.sub }}</span></div></div>
+<span style="display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ d.statusColor }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ d.dot }}"></span>{{ d.status }}</span>
+<sc-if value="{{ d.on }}">
+<div style="display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid #E6E6DD">
+<sc-for list="{{ d.opts }}" as="o"><button onClick="{{ o.onClick }}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;background:none;padding:0;color:#1F211A;font-size:13.5px;text-align:left;cursor:pointer"><span>{{ o.label }}</span><span style="position:relative;width:36px;height:20px;border-radius:10px;background:{{ o.track }};flex:none;transition:background .2s"><span style="position:absolute;top:2px;left:{{ o.knob }};width:16px;height:16px;border-radius:50%;background:#FFFFFF;transition:left .2s"></span></span></button></sc-for>
+</div>
+</sc-if>
+<button onClick="{{ d.onConnect }}" style="margin-top:auto;border:1px solid {{ d.btnBorder }};border-radius:10px;background:{{ d.btnBg }};color:{{ d.btnColor }};padding:10px;font-size:14px;font-weight:600;cursor:pointer">{{ d.btnLabel }}</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ sSetList }}" hint-placeholder-val="{{ false }}">
+<div style="background:#FFFFFF;border:1px solid #E6E6DD;border-radius:16px;overflow:hidden">
+<sc-for list="{{ devices }}" as="d" hint-placeholder-count="3">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;padding:18px 20px;border-bottom:1px solid #E6E6DD">
+<span style="width:40px;height:40px;border-radius:11px;background:#1F211A;color:#FFFFFF;display:grid;place-items:center;font-size:17px;font-weight:700;flex:none">{{ d.mark }}</span>
+<div style="flex:1 1 200px;display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font-size:16px;font-weight:600">{{ d.name }}</span><span style="display:flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ d.statusColor }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ d.dot }}"></span>{{ d.status }}</span></div>
+<sc-if value="{{ d.on }}"><div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ d.opts }}" as="o"><button onClick="{{ o.onClick }}" style="display:flex;align-items:center;gap:8px;border:1px solid #E6E6DD;border-radius:999px;background:#F8F8F4;padding:5px 10px 5px 6px;color:#1F211A;font-size:12.5px;cursor:pointer"><span style="position:relative;width:28px;height:16px;border-radius:8px;background:{{ o.track }};flex:none"><span style="position:absolute;top:2px;left:{{ o.knob }};width:12px;height:12px;border-radius:50%;background:#FFFFFF"></span></span>{{ o.label }}</button></sc-for></div></sc-if>
+<button onClick="{{ d.onConnect }}" style="border:1px solid {{ d.btnBorder }};border-radius:10px;background:{{ d.btnBg }};color:{{ d.btnColor }};padding:8px 16px;font-size:13.5px;font-weight:600;cursor:pointer">{{ d.btnLabel }}</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</section>
+<section style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.02em">My sports</h2><span style="font-size:14px;color:#686A5F">Your coach plans only these. They also set the training types you can pick.</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px">
+<sc-for list="{{ sportToggles }}" as="t" hint-placeholder-count="5">
+<button onClick="{{ t.onClick }}" style="display:flex;align-items:flex-start;gap:12px;padding:16px;border:1.5px solid {{ t.border }};border-radius:14px;background:{{ t.bg }};text-align:left;cursor:pointer">
+<span style="width:20px;height:20px;border-radius:6px;border:1.5px solid {{ t.checkBorder }};background:{{ t.checkBg }};color:#FFFFFF;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none">{{ t.check }}</span>
+<span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:600;color:{{ t.labelColor }}">{{ t.label }}</span><span style="font-size:12.5px;color:#686A5F">{{ t.desc }}</span></span>
+</button>
+</sc-for>
+</div>
+</section>
+</div>
+</sc-if>
+</main>
+</div>
+<sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);display:flex;align-items:center;gap:16px;padding:12px 14px 12px 18px;background:#1F211A;color:#FFFFFF;border-radius:12px;box-shadow:0 16px 40px rgba(30,32,20,.2);font-size:14px;font-weight:500;z-index:10">
+<span>{{ toast.msg }}</span>
+<sc-if value="{{ toast.hasAction }}"><button onClick="{{ toast.onAction }}" style="border:0;border-radius:8px;background:#FFFFFF;color:#5C6B24;padding:6px 10px;font-size:13px;font-weight:600;cursor:pointer">{{ toast.action }}</button></sc-if>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;todayLayout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Focus&quot;,&quot;Timeline&quot;,&quot;Week&quot;],&quot;default&quot;:&quot;Focus&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Layouts&quot;},&quot;calendarView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Month&quot;,&quot;Week&quot;],&quot;default&quot;:&quot;Month&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Layouts&quot;},&quot;builderStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Form&quot;,&quot;Guided&quot;],&quot;default&quot;:&quot;Form&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Layouts&quot;},&quot;strengthView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Grid&quot;,&quot;Groups&quot;],&quot;default&quot;:&quot;Grid&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Layouts&quot;}}">
+const TODAY='2026-10-07', NOW=6*60+45;
+const TYPES={run:{label:'Running',color:'#C2562B',desc:'Easy, tempo, intervals, long',endur:true},ride:{label:'Road bike',color:'#2F6F73',desc:'Endurance, sweet spot, climbs',endur:true},strength:{label:'Strength',color:'#5C6B24',desc:'Gym and bodyweight'},mobility:{label:'Mobility',color:'#3F6FB5',desc:'Stretching and recovery'},sport:{label:'Team sport',color:'#7D5BB0',desc:'Practice or match'}};
+const SPORTS={lena:['run','strength','mobility'],jonas:['strength','ride','run','mobility'],mia:['sport','strength','mobility','run']};
+const DEVICES=[{id:'garmin',name:'Garmin Connect',sub:'Forerunner, fēnix, Edge'},{id:'wahoo',name:'Wahoo',sub:'ELEMNT bike computers, KICKR'},{id:'coros',name:'COROS',sub:'PACE, APEX, VERTIX'}];
+const DEV0={lena:{garmin:{on:true,imp:true,push:true,last:'4 min ago'}},jonas:{wahoo:{on:true,imp:true,push:true,last:'1 h ago'},garmin:{on:true,imp:true,push:false,last:'1 h ago'}},mia:{}};
+const GROUPS=['Legs','Glutes','Back','Chest','Shoulders','Core','Arms'];
+const X=(name,group,equip,level,muscles,cue,rx)=>({name,group,equip,level,muscles,cue,rx});
+const EX={
+squat:X('Back squat','Legs','Barbell','Intermediate','Quads, glutes, adductors','Brace before you descend. Knees track over toes, hips sit between the heels.',[4,'6','80 kg']),
+rdl:X('Romanian deadlift','Legs','Barbell','Intermediate','Hamstrings, glutes','Soft knees, push the hips back until you feel the hamstrings. Bar stays close.',[3,'8','60 kg']),
+split:X('Bulgarian split squat','Legs','Dumbbells','Intermediate','Quads, glutes','Rear foot on a bench. Lower the back knee straight down, front heel planted.',[3,'8 / leg','2×12 kg']),
+lunge:X('Walking lunge','Legs','Dumbbells','Beginner','Quads, glutes','Long step, back knee almost touches the floor. Torso stays tall.',[3,'10 / leg','2×10 kg']),
+calf:X('Single-leg calf raise','Legs','Bodyweight','Beginner','Calves, Achilles','Full range: pause at the top, lower for three seconds.',[3,'12 / leg','BW']),
+hipthrust:X('Hip thrust','Glutes','Barbell','Intermediate','Glutes, hamstrings','Shoulders on the bench, chin tucked. Drive through the heels and lock out.',[4,'10','60 kg']),
+bridge:X('Single-leg glute bridge','Glutes','Bodyweight','Beginner','Glutes','Keep the hips level as you press up. Squeeze for two seconds.',[3,'12 / leg','BW']),
+pullup:X('Pull-up','Back','Pull-up bar','Advanced','Lats, biceps','Start from a dead hang. Pull the chest to the bar, control the way down.',[4,'6','BW']),
+row:X('Bent-over row','Back','Barbell','Intermediate','Upper back, lats','Hinge to 45°, flat back. Pull the bar to the lower ribs.',[4,'8','50 kg']),
+bench:X('Bench press','Chest','Barbell','Intermediate','Chest, triceps, front delts','Shoulder blades pinned, feet planted. Touch mid-chest, press up and back.',[4,'6','70 kg']),
+pushup:X('Push-up','Chest','Bodyweight','Beginner','Chest, triceps, core','Body in one line. Elbows at roughly 45° to the torso.',[3,'12','BW']),
+ohp:X('Overhead press','Shoulders','Barbell','Intermediate','Shoulders, triceps','Squeeze the glutes, press straight up and move the head through at the top.',[3,'8','40 kg']),
+lateral:X('Lateral raise','Shoulders','Dumbbells','Beginner','Side delts','Lead with the elbows, stop at shoulder height. Slow on the way down.',[3,'12','2×8 kg']),
+plank:X('Plank','Core','Bodyweight','Beginner','Deep core, shoulders','Elbows under shoulders, ribs down, glutes tight.',[3,'45 s','BW']),
+deadbug:X('Dead bug','Core','Bodyweight','Beginner','Deep core','Lower back pressed into the floor while the opposite arm and leg extend.',[3,'10','BW']),
+pallof:X('Pallof press','Core','Band','Beginner','Obliques, anti-rotation','Press the band straight out and resist the pull. Hips stay square.',[3,'12 / side','Band']),
+curl:X('Biceps curl','Arms','Dumbbells','Beginner','Biceps','Elbows fixed at your sides, no swinging.',[3,'10','2×12 kg'])};
+const PROFILES={
+lena:{name:'Lena Hoffmann',first:'Lena',initials:'LH',color:'#5C6B24',goal:'Hamburg Half Marathon',goalDate:'2026-11-22',rec:['split','rdl','calf','hipthrust','deadbug','pallof'],recNote:'Single-leg stability, posterior chain and anti-rotation core: the strength work that carries over to running.'},
+jonas:{name:'Jonas Weber',first:'Jonas',initials:'JW',color:'#C2562B',goal:'Squat 120 kg',goalDate:'2026-11-30',rec:['squat','bench','row','ohp','pullup','rdl'],recNote:'Compound lifts for your strength block. Add load weekly and keep one or two reps in reserve.'},
+mia:{name:'Mia Hoffmann',first:'Mia',initials:'MH',color:'#3F6FB5',goal:'U17 season opener',goalDate:'2026-10-31',rec:['lunge','pushup','plank','bridge','calf','deadbug'],recNote:'Bodyweight basics that support football: balance, core control and injury prevention.'}};
+const S=(type,title,time,dur,ex,note)=>[type,title,time,dur,ex||[],note||''];
+const TPL={
+lena:[[S('strength','Runner strength A','07:00',45,[['split',3,'8 / leg','2×12 kg'],['rdl',3,'8','50 kg'],['calf',3,'12 / leg','BW'],['deadbug',3,'10','BW']])],
+[S('run','Easy run · 8 km','07:00',50,0,'Conversational pace, heart rate under 145.')],
+[S('strength','Lower body strength','07:00',55,[['split',4,'8 / leg','2×14 kg'],['hipthrust',4,'10','70 kg'],['rdl',3,'8','55 kg'],['calf',3,'15 / leg','BW'],['pallof',3,'12 / side','Band']]),S('run','Recovery jog · 5 km','18:30',30,0,'Very easy. Shake out the legs from this morning.')],
+[S('mobility','Mobility flow','19:00',30,0,'Hips, ankles and thoracic spine. 30 minutes, no rush.')],
+[S('run','Intervals · 6×800 m','07:00',60,0,'2 km warm-up, 6×800 m at 10K pace with 90 s jog, 2 km cool-down.')],
+[S('run','Long run · 18 km','09:00',105,0,'Steady. Last 3 km at half-marathon pace.')],[]],
+jonas:[[S('strength','Push day','18:00',60,[['bench',4,'6','80 kg'],['ohp',3,'8','45 kg'],['pushup',3,'AMRAP','BW'],['lateral',3,'12','2×8 kg']])],
+[S('strength','Pull day','18:00',55,[['pullup',4,'6','BW'],['row',4,'8','60 kg'],['curl',3,'10','2×12 kg'],['plank',3,'45 s','BW']])],
+[S('ride','Zone 2 bike','07:30',40,0,'Easy spin, nasal breathing.'),S('strength','Leg day','18:00',65,[['squat',5,'5','100 kg'],['rdl',3,'8','80 kg'],['lunge',3,'10 / leg','2×16 kg'],['plank',3,'45 s','BW']])],
+[S('mobility','Hips & shoulders','19:00',25,0,'Couch stretch, 90/90, band dislocates.')],
+[S('strength','Full body','18:00',60,[['squat',3,'8','85 kg'],['bench',3,'8','70 kg'],['row',3,'10','55 kg'],['pallof',3,'12 / side','Band']])],
+[S('run','Run · 6 km','10:00',35,0,'Easy pace.')],[S('ride','Road bike · 60 km','09:30',120,0,'Endurance ride at 180–200 W. Eat every 30 minutes.')]],
+mia:[[S('sport','Football practice','17:30',90,0,'Team session.')],
+[S('strength','Strength basics','16:00',35,[['lunge',3,'8 / leg','BW'],['pushup',3,'8','BW'],['plank',3,'30 s','BW'],['deadbug',3,'8','BW']])],
+[S('strength','Strength basics B','16:00',30,[['bridge',3,'10 / leg','BW'],['calf',3,'12 / leg','BW'],['pushup',3,'8','BW'],['plank',3,'30 s','BW']]),S('sport','Football practice','18:00',90,0,'Team session.')],
+[S('mobility','Stretch & roll','19:30',20,0,'Foam roller and hamstring stretches.')],
+[S('sport','Football practice','17:30',90,0,'Team session.')],
+[S('sport','Match day','11:00',90,0,'Home game. Arrive 45 minutes early.')],[]]};
+const SRC={lena:[['coach'],['me'],['coach','me'],['past'],['coach'],['coach'],[]],jonas:[['past'],['past'],['me','coach'],['coach'],['coach'],['me'],['me']],mia:[['me'],['coach'],['coach','me'],['past'],['me'],['me'],[]]};
+const SRCS={coach:{label:'Coach',long:'Planned by your coach',bg:'#E9EDD6',color:'#4A5620'},me:{label:'You',long:'Added by you',bg:'#ECECE5',color:'#2F3129'},past:{label:'Repeat',long:'Repeated from',bg:'#F1ECE1',color:'#6E5A35'}};
+const NOTES={lena:'Saturday’s long run looked strong. I kept today’s load the same and added Pallof presses for core stability.',jonas:'Monday’s squats moved well, so today goes to 5 × 5 at 100 kg. Stop a set early if bar speed drops.',mia:'Match on Saturday, so today stays light. Focus on clean form, not speed.'};
+const CS=(title,type,dur,why,ex)=>({title,type,dur,why,ex:(ex||[]).map(e=>({id:e[0],sets:e[1],reps:e[2],load:e[3]}))});
+const COACH={
+lena:[CS('Runner strength B','strength',45,'Thursday is free and your legs recover well by then. Short and single-leg focused.',[['bridge',3,'12 / leg','BW'],['calf',3,'15 / leg','BW'],['deadbug',3,'10','BW'],['pallof',3,'12 / side','Band']]),CS('Tempo run · 6 km','run',40,'One quality session before the long run: 4 km at half-marathon pace in the middle.'),CS('Hip mobility','mobility',20,'Your hip-thrust load went up 10 kg in two weeks. Keep the hips moving.')],
+jonas:[CS('Squat technique','strength',40,'Bar speed dropped on your last two sets at 100 kg. Lighter paused reps rebuild speed.',[['squat',5,'3 paused','80 kg'],['split',3,'8 / leg','2×14 kg'],['plank',3,'45 s','BW']]),CS('Upper back volume','strength',45,'Pulling volume is behind pushing in this block.',[['row',4,'10','55 kg'],['pullup',3,'8','BW'],['lateral',3,'15','2×6 kg']]),CS('Zone 2 bike','ride',40,'Easy aerobic work helps recovery between leg days.')],
+mia:[CS('Pre-match activation','strength',20,'Light and short the day before a match.',[['bridge',2,'10 / leg','BW'],['lunge',2,'6 / leg','BW'],['plank',2,'20 s','BW']]),CS('Balance & ankles','strength',25,'Regular balance work means fewer ankle sprains during the season.',[['calf',3,'12 / leg','BW'],['lunge',3,'8 / leg','BW'],['deadbug',3,'8','BW']]),CS('Stretch & roll','mobility',20,'Recovery after two practices in a row.')]};
+const MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], WDL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const D=iso=>{const [y,m,d]=iso.split('-').map(Number);return new Date(Date.UTC(y,m-1,d));};
+const I=dt=>dt.toISOString().slice(0,10);
+const add=(iso,n)=>{const d=D(iso);d.setUTCDate(d.getUTCDate()+n);return I(d);};
+const wd=iso=>(D(iso).getUTCDay()+6)%7;
+const longDate=iso=>`${WDL[wd(iso)]}, ${D(iso).getUTCDate()} ${MON[D(iso).getUTCMonth()]}`;
+const shortDate=iso=>`${WD[wd(iso)]} ${D(iso).getUTCDate()} ${MON[D(iso).getUTCMonth()].slice(0,3)}`;
+const mins=t=>{const [h,m]=t.split(':').map(Number);return h*60+m;};
+const hhmm=n=>String(Math.floor(n/60)%24).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+const tint=c=>`color-mix(in oklch, ${c} 13%, #FFFFFF)`;
+function gen(pid){const out=[];let d='2026-08-31';while(d<='2026-12-06'){TPL[pid][wd(d)].forEach((s,i)=>out.push({id:pid+d+i,date:d,type:s[0],title:s[1],time:s[2],dur:s[3],ex:s[4].map(e=>({id:e[0],sets:e[1],reps:e[2],load:e[3]})),note:s[5],src:SRC[pid][wd(d)][i]||'coach',from:add(d,-7)}));d=add(d,1);}return out;}
+const newDraft=()=>({dist:'',target:'',title:'',type:'strength',date:'2026-10-08',time:'07:00',dur:'45',ex:[],src:'me',from:null,pick:null});
+const VARIANTS={settings:['Cards','List'],today:['Focus','Timeline','Week'],calendar:['Month','Week'],builder:['Form','Guided'],strength:['Grid','Groups']};
+const PROPMAP={today:'todayLayout',calendar:'calendarView',builder:'builderStyle',strength:'strengthView'};
+
+class Component extends DCLogic {
+  state=(()=>{const p=this.props||{};const v={};Object.keys(VARIANTS).forEach(k=>v[k]=VARIANTS[k].includes(p[PROPMAP[k]])?p[PROPMAP[k]]:VARIANTS[k][0]);
+    return {screen:'today',pid:'lena',sessions:{lena:gen('lena'),jonas:gen('jonas'),mia:gen('mia')},done:{},completed:{},v,selSession:null,calMonth:'2026-10-01',weekStart:'2026-10-05',selDate:TODAY,draft:newDraft(),step:1,q:'',grp:'All',libGrp:'Legs',profOpen:false,toast:null,startMode:'blank',srcFilter:'all',sports:JSON.parse(JSON.stringify(SPORTS)),devices:JSON.parse(JSON.stringify(DEV0))};})();
+  setDev(id,patch){this.setState(st=>{const cur=st.devices[st.pid]||{};return {devices:{...st.devices,[st.pid]:{...cur,[id]:{...(cur[id]||{}),...patch}}}};});}
+  connect(id,name){const d=(this.state.devices[this.state.pid]||{})[id];
+    if(d&&d.on){this.setDev(id,{on:false,busy:false});this.flash(`${name} disconnected`);return;}
+    this.setDev(id,{busy:true});setTimeout(()=>{this.setDev(id,{busy:false,on:true,imp:true,push:true,last:'Just now'});this.flash(`${name} connected`);},1200);}
+  toggleSport(k){this.setState(st=>{const cur=st.sports[st.pid];const next=cur.includes(k)?cur.filter(x=>x!==k):[...cur,k];return next.length?{sports:{...st.sports,[st.pid]:next}}:null;});}
+  usePlan(p,src,key){this.setState(st=>({draft:{...st.draft,title:p.title,type:p.type,dur:String(p.dur),ex:p.ex.map(e=>({...e})),src,from:p.date||null,pick:key}}));this.flash(src==='coach'?`Loaded coach plan “${p.title}”`:`Copied “${p.title}” from ${shortDate(p.date)}`);}
+  componentDidUpdate(prev){const p=this.props||{},pp=prev||{};Object.keys(PROPMAP).forEach(k=>{const n=PROPMAP[k];if(p[n]!==pp[n]&&VARIANTS[k].includes(p[n]))this.setState(s=>({v:{...s.v,[k]:p[n]}}));});}
+  componentWillUnmount(){clearTimeout(this._t);}
+  flash(msg,action,onAction){clearTimeout(this._t);this.setState({toast:{msg,action,onAction}});this._t=setTimeout(()=>this.setState({toast:null}),3200);}
+  toggleDone(id,i){const k=id+':'+i;this.setState(s=>({done:{...s.done,[k]:!s.done[k]}}));}
+  openBuilder(date){this.setState(s=>({screen:'builder',profOpen:false,step:1,draft:{...s.draft,date:date||s.draft.date}}));}
+  toggleEx(id){const st=this.state;const has=st.draft.ex.some(e=>e.id===id);const E=EX[id];
+    this.setState(s=>({draft:{...s.draft,ex:has?s.draft.ex.filter(e=>e.id!==id):[...s.draft.ex,{id,sets:E.rx[0],reps:E.rx[1],load:E.rx[2]}]}}));
+    if(!has&&st.screen==='strength')this.flash(`${E.name} added to new training`,'Open',()=>this.openBuilder());}
+  updEx(i,patch){this.setState(s=>({draft:{...s.draft,ex:s.draft.ex.map((e,j)=>j===i?{...e,...patch(e)}:e)}}));}
+  save(){const st=this.state,d=st.draft;const title=d.title.trim()||TYPES[d.type].label+' session';const date=d.date||TODAY;
+    const x={id:'n'+Date.now(),date,type:d.type,title,time:d.time||'07:00',dur:parseInt(d.dur)||45,ex:d.ex.map(e=>({...e})),note:TYPES[d.type].endur&&(d.dist||d.target)?[d.dist&&d.dist+' km',d.target].filter(Boolean).join(' · '):'Custom training.',src:d.src||'me',from:d.from};
+    this.setState({sessions:{...st.sessions,[st.pid]:[...st.sessions[st.pid],x]},draft:newDraft(),step:1,screen:'calendar',selDate:date,calMonth:date.slice(0,8)+'01',weekStart:add(date,-wd(date))});
+    this.flash(`Saved “${title}” to ${shortDate(date)}`);}
+  sv(x){const s=this.state,T=TYPES[x.type];
+    const exs=x.ex.map((e,i)=>{const E=EX[e.id];const done=x.date<TODAY||!!s.done[x.id+':'+i];
+      return {n:String(i+1).padStart(2,'0'),name:E.name,group:E.group,muscles:E.muscles,cue:E.cue,rx:`${e.sets} × ${e.reps}`,load:e.load,done,onToggle:()=>this.toggleDone(x.id,i),checkBg:done?'#5C6B24':'transparent',checkBorder:done?'#5C6B24':'#B5B6A9',checkMark:done?'✓':'',nameColor:done?'#686A5F':'#1F211A',strike:done?'line-through':'none',cardBorder:done?'#5C6B24':'#E6E6DD'};});
+    const nDone=exs.filter(e=>e.done).length;
+    const complete=x.date<TODAY||!!s.completed[x.id]||(exs.length>0&&nDone===exs.length);
+    return {id:x.id,title:x.title,typeLabel:T.label,color:T.color,time:x.time,end:hhmm(mins(x.time)+x.dur),dur:x.dur+' min',durN:x.dur,note:x.note,exs,hasEx:exs.length>0,noEx:exs.length===0,
+      progress:exs.length?`${nDone} of ${exs.length} done`:(complete?'Done':'Not started'),pct:(exs.length?nDone/exs.length*100:complete?100:0)+'%',exCount:exs.length+' exercises',complete,
+      statusLabel:complete?(T.endur&&x.date<TODAY&&this.syncName()?'Done · '+this.syncName():'Done'):x.date===TODAY?'Today':x.date<TODAY?'Missed':'Planned',completeLabel:complete?'Completed ✓':'Mark as complete',btnBg:complete?'transparent':'#5C6B24',btnColor:complete?'#5C6B24':'#FFFFFF',
+      onComplete:()=>this.setState(st=>({completed:{...st.completed,[x.id]:!complete}})),onSelect:()=>this.setState({selSession:x.id}),dateLabel:shortDate(x.date),...this.srcVM(x)};}
+  syncName(){const d=this.state.devices[this.state.pid]||{};const f=DEVICES.find(x=>d[x.id]&&d[x.id].on&&d[x.id].imp);return f?f.name.split(' ')[0]:'';}
+  srcVM(x){const K=SRCS[x.src||'me'];return {srcLabel:K.label,srcBg:K.bg,srcColor:K.color,srcLong:x.src==='past'&&x.from?`${K.long} ${shortDate(x.from)}`:K.long};}
+  renderVals(){
+    const s=this.state,P=PROFILES[s.pid],all=s.sessions[s.pid];
+    const byDate=d=>all.filter(x=>x.date===d).sort((a,b)=>a.time.localeCompare(b.time));
+    const byDateF=d=>byDate(d).filter(x=>s.srcFilter==='all'||x.src===s.srcFilter);
+    const srcChips=[['all','All'],['coach','Coach'],['me','You'],['past','Repeat']].map(([k,l])=>{const a=s.srcFilter===k;return {label:l,onClick:()=>this.setState({srcFilter:k}),bg:a?'#1F211A':'#FFFFFF',color:a?'#FFFFFF':'#43453C',border:a?'#1F211A':'#D4D4C9',dot:k==='all'?'transparent':SRCS[k].color};});
+    const startOpts=[['blank','Start from scratch','Build it yourself'],['past','Repeat a past training','Copy one you already did'],['coach','Ask my coach','Plans suggested for you']].map(([k,l,d])=>{const a=s.startMode===k;return {label:l,desc:d,onClick:()=>this.setState(st=>({startMode:k,draft:k==='blank'?newDraft():st.draft})),bg:a?'#EEF0E2':'#FFFFFF',border:a?'#5C6B24':'#E6E6DD',dot:a?'#5C6B24':'#D4D4C9'};});
+    const seen={};const pastPlans=all.filter(x=>x.date<TODAY&&x.ex.length).sort((a,b)=>b.date.localeCompare(a.date)).filter(x=>seen[x.title]?false:(seen[x.title]=1)).slice(0,6).map(x=>{const k='p'+x.id,a=s.draft.pick===k;
+      return {title:x.title,meta:`${shortDate(x.date)} · ${x.ex.length} exercises · ${x.dur} min`,list:x.ex.map(e=>EX[e.id].name).join(', '),onUse:()=>this.usePlan(x,'past',k),useLabel:a?'Loaded ✓':'Use this',useBg:a?'#5C6B24':'#FFFFFF',useColor:a?'#FFFFFF':'#1F211A',border:a?'#5C6B24':'#E6E6DD'};});
+    const coachPlans=COACH[s.pid].map((p,i)=>{const k='c'+i,a=s.draft.pick===k,T=TYPES[p.type];
+      return {title:p.title,typeLabel:T.label,color:T.color,meta:`${p.dur} min`+(p.ex.length?` · ${p.ex.length} exercises`:''),why:p.why,onUse:()=>this.usePlan(p,'coach',k),useLabel:a?'Loaded ✓':'Use plan',useBg:a?'#5C6B24':'#FFFFFF',useColor:a?'#FFFFFF':'#1F211A',border:a?'#5C6B24':'#E6E6DD'};});
+    const go=scr=>()=>this.setState({screen:scr,profOpen:false});
+    const nav=[['today','Today'],['calendar','Calendar'],['builder','New training'],['strength','Strength exercises'],['settings','Settings']].map(([id,label])=>{const a=s.screen===id;return {label,onClick:go(id),bg:a?'#EEF0E2':'transparent',color:a?'#1F211A':'#686A5F',bar:a?'#5C6B24':'transparent'};});
+    const variants=VARIANTS[s.screen].map(l=>{const a=s.v[s.screen]===l;return {label:l,onClick:()=>this.setState(st=>({v:{...st.v,[st.screen]:l}})),bg:a?'#1F211A':'transparent',color:a?'#FFFFFF':'#686A5F'};});
+    const head={today:[longDate(TODAY),`Good morning, ${P.first}`],calendar:['Plan',MON[D(s.calMonth).getUTCMonth()]+' at a glance'],builder:['Create','New training'],strength:['Library','Strength exercises'],settings:[P.name,'Settings']}[s.screen];
+    // today
+    const todays=byDate(TODAY).map(x=>this.sv(x));
+    const fid=(s.selSession&&todays.find(t=>t.id===s.selSession))?s.selSession:((todays.find(t=>t.hasEx)||todays[0]||{}).id);
+    const focus=todays.find(t=>t.id===fid)||null;
+    const others=todays.filter(t=>t.id!==fid);
+    const wk0=add(TODAY,-wd(TODAY));let wkDone=0,wkAll=0;
+    const week=WD.map((w,i)=>{const d=add(wk0,i);const ss=byDate(d);ss.forEach(x=>{wkAll++;if(this.sv(x).complete)wkDone++;});const isT=d===TODAY;
+      return {wd:w,day:D(d).getUTCDate(),bg:isT?'#EEF0E2':'#FFFFFF',border:isT?'#5C6B24':'#E6E6DD',onClick:()=>this.setState({screen:'calendar',selDate:d,calMonth:d.slice(0,8)+'01',weekStart:wk0}),
+        sessions:ss.map(x=>({title:x.title,time:x.time,color:TYPES[x.type].color,tint:tint(TYPES[x.type].color),op:d<TODAY?0.55:1,...this.srcVM(x)}))};});
+    const H=54,h0=6,h1=22;
+    const hours=[];for(let h=h0;h<=h1;h++)hours.push({label:String(h).padStart(2,'0')+':00',top:(h-h0)*H+'px'});
+    const blocks=todays.map(t=>{const m=mins(t.time);const sel=t.id===fid;return {...t,top:((m/60-h0)*H)+'px',height:Math.max(t.durN/60*H-4,46)+'px',tint:tint(t.color),border:sel?t.color:'transparent'};});
+    const gd=Math.round((D(P.goalDate)-D(TODAY))/86400000);
+    // calendar
+    const m0=s.calMonth,mi=D(m0).getUTCMonth(),dim=new Date(Date.UTC(D(m0).getUTCFullYear(),mi+1,0)).getUTCDate();
+    const start=add(m0,-wd(m0)),nC=Math.ceil((wd(m0)+dim)/7)*7;
+    const cells=[];for(let i=0;i<nC;i++){const d=add(start,i);const inM=D(d).getUTCMonth()===mi,isT=d===TODAY,sel=d===s.selDate;
+      cells.push({day:D(d).getUTCDate(),onClick:()=>this.setState({selDate:d}),bg:sel?'#EEF0E2':'#F8F8F4',border:sel?'#5C6B24':'#EEF0E2',op:inM?1:0.4,numBg:isT?'#5C6B24':'transparent',numColor:isT?'#FFFFFF':'#1F211A',
+        sessions:byDateF(d).map(x=>({title:x.title,color:TYPES[x.type].color,tint:tint(TYPES[x.type].color),op:d<TODAY?0.6:1,...this.srcVM(x)}))});}
+    const shiftM=n=>()=>this.setState(st=>{const d=D(st.calMonth);return {calMonth:I(new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+n,1)))};});
+    const ws=s.weekStart,we=add(ws,6);
+    const weekLabel=D(ws).getUTCMonth()===D(we).getUTCMonth()?`${D(ws).getUTCDate()} – ${D(we).getUTCDate()} ${MON[D(we).getUTCMonth()]}`:`${D(ws).getUTCDate()} ${MON[D(ws).getUTCMonth()].slice(0,3)} – ${D(we).getUTCDate()} ${MON[D(we).getUTCMonth()].slice(0,3)}`;
+    const weekCols=WD.map((w,i)=>{const d=add(ws,i);const isT=d===TODAY,sel=d===s.selDate;
+      return {wd:w,day:D(d).getUTCDate(),numColor:isT?'#5C6B24':'#1F211A',bg:sel?'#EEF0E2':'#F8F8F4',border:sel?'#5C6B24':'#EEF0E2',onClick:()=>this.setState({selDate:d}),onAdd:()=>this.openBuilder(d),
+        sessions:byDateF(d).map(x=>({title:x.title,time:x.time,dur:x.dur+' min',color:TYPES[x.type].color,op:d<TODAY?0.6:1,...this.srcVM(x)}))};});
+    const selS=byDate(s.selDate).map(x=>this.sv(x));
+    const sel={label:longDate(s.selDate),status:s.selDate===TODAY?'Today':s.selDate<TODAY?'Past':'Upcoming',sessions:selS,empty:selS.length===0,onAdd:()=>this.openBuilder(s.selDate)};
+    // builder
+    const dr=s.draft,inDraft=id=>dr.ex.some(e=>e.id===id);
+    const setD=k=>e=>{const v=e.target.value;this.setState(st=>({draft:{...st.draft,[k]:v}}));};
+    const rows=dr.ex.map((e,i)=>({n:String(i+1).padStart(2,'0'),name:EX[e.id].name,group:EX[e.id].group,sets:e.sets,reps:e.reps,load:e.load,
+      incS:()=>this.updEx(i,x=>({sets:Math.min(10,x.sets+1)})),decS:()=>this.updEx(i,x=>({sets:Math.max(1,x.sets-1)})),
+      onReps:ev=>{const v=ev.target.value;this.updEx(i,()=>({reps:v}));},onLoad:ev=>{const v=ev.target.value;this.updEx(i,()=>({load:v}));},
+      remove:()=>this.setState(st=>({draft:{...st.draft,ex:st.draft.ex.filter((_,j)=>j!==i)}}))}));
+    const draft={title:dr.title,date:dr.date,time:dr.time,dur:dr.dur,onTitle:setD('title'),onDate:setD('date'),onTime:setD('time'),onDur:setD('dur'),rows,hasRows:rows.length>0,noRows:rows.length===0,count:rows.length+(rows.length===1?' exercise':' exercises')};
+    const mySports=s.sports[s.pid],myDev=s.devices[s.pid]||{};
+    const sportToggles=Object.entries(TYPES).map(([k,T])=>{const a=mySports.includes(k);return {label:T.label,desc:T.desc,color:T.color,onClick:()=>this.toggleSport(k),bg:a?'#FFFFFF':'#F8F8F4',border:a?T.color:'#E6E6DD',check:a?'✓':'',checkBg:a?T.color:'transparent',checkBorder:a?T.color:'#B5B6A9',labelColor:a?'#1F211A':'#686A5F'};});
+    const devices=DEVICES.map(D0=>{const d=myDev[D0.id]||{};const on=!!d.on,busy=!!d.busy;const opt=(k,label)=>({label,on:!!d[k],onClick:()=>this.setDev(D0.id,{[k]:!d[k]}),track:d[k]?'#5C6B24':'#D4D4C9',knob:d[k]?'18px':'2px'});
+      return {...D0,mark:D0.name[0],on,off:!on,status:busy?'Connecting…':on?`Connected · synced ${d.last}`:'Not connected',statusColor:on?'#4A5620':'#686A5F',dot:on?'#5C6B24':busy?'#C2562B':'#C6C7BA',
+        btnLabel:busy?'Connecting…':on?'Disconnect':'Connect',btnBg:on?'#FFFFFF':'#1F211A',btnColor:on?'#1F211A':'#FFFFFF',btnBorder:on?'#D4D4C9':'#1F211A',onConnect:()=>busy||this.connect(D0.id,D0.name),
+        border:on?'#C9D1A8':'#E6E6DD',opts:[opt('imp','Import completed activities'),opt('push','Send planned workouts to device')]};});
+    const nConn=devices.filter(d=>d.on).length;
+    const typeOpts=Object.entries(TYPES).filter(([k])=>mySports.includes(k)||dr.type===k).map(([k,T])=>{const a=dr.type===k;return {label:T.label,desc:T.desc,color:T.color,onClick:()=>this.setState(st=>({draft:{...st.draft,type:k}})),bg:a?'#EEF0E2':'transparent',border:a?T.color:'#DCDCD2'};});
+    const exVM=id=>{const E=EX[id],a=inDraft(id),rec=P.rec.includes(id);return {name:E.name,group:E.group,equip:E.equip,level:E.level,muscles:E.muscles,cue:E.cue,rx:`${E.rx[0]} × ${E.rx[1]}`,load:E.rx[2],rec,
+      onAdd:()=>this.toggleEx(id),addLabel:a?'Added ✓':'+ Add',addBg:a?'#5C6B24':'transparent',addColor:a?'#FFFFFF':'#1F211A',addBorder:a?'#5C6B24':'#C6C7BA',checkBg:a?'#5C6B24':'transparent',checkMark:a?'✓':'',border:rec?'#D5DBBE':'#E6E6DD'};};
+    const q=s.q.trim().toLowerCase();
+    const ids=Object.keys(EX).sort((a,b)=>(P.rec.includes(b)?1:0)-(P.rec.includes(a)?1:0));
+    const picker=ids.filter(id=>(s.grp==='All'||EX[id].group===s.grp)&&(!q||EX[id].name.toLowerCase().includes(q))).map(exVM);
+    const grpChips=['All',...GROUPS].map(g=>{const a=s.grp===g;return {label:g,onClick:()=>this.setState({grp:g}),bg:a?'#1F211A':'transparent',color:a?'#FFFFFF':'#43453C',border:a?'#1F211A':'#D4D4C9'};});
+    const steps=['Details','Exercises','Review'].map((l,i)=>({n:'0'+(i+1),label:l,onClick:()=>this.setState({step:i+1}),bar:i+1<=s.step?'#5C6B24':'#E6E6DD',color:i+1===s.step?'#1F211A':'#686A5F'}));
+    const review=this.sv({id:'draft',date:dr.date||TODAY,type:dr.type,title:dr.title.trim()||TYPES[dr.type].label+' session',time:dr.time||'07:00',dur:parseInt(dr.dur)||45,ex:dr.ex,note:'',src:dr.src,from:dr.from});
+    review.dateLabel=longDate(dr.date||TODAY);
+    // strength
+    const groups=GROUPS.map(g=>{const a=s.libGrp===g;return {label:g,count:Object.values(EX).filter(e=>e.group===g).length,onClick:()=>this.setState({libGrp:g}),bg:a?'#EEF0E2':'transparent',color:a?'#1F211A':'#686A5F'};});
+    const groupIds=ids.filter(id=>EX[id].group===s.libGrp);const nRec=groupIds.filter(id=>P.rec.includes(id)).length;
+    const scr=s.screen,v=s.v;
+    return {
+      sSet:scr==='settings',sSetCards:v.settings==='Cards',sSetList:v.settings==='List',devices,sportToggles,connSummary:nConn?`${nConn} connected`:'None connected',
+      isEndur:!!TYPES[dr.type].endur,distVal:dr.dist,targetVal:dr.target,onDist:setD('dist'),onTarget:setD('target'),targetPh:dr.type==='ride'?'e.g. 180–200 W':'e.g. 5:30 /km',
+      srcChips,startOpts,pastPlans,coachPlans,startPast:s.startMode==='past',startCoach:s.startMode==='coach',sBuild:scr==='builder',coachNote:NOTES[s.pid],draftSrc:SRCS[s.draft.src||'me'].long,
+      nav,variants,eyebrow:head[0],title:head[1],newTraining:()=>this.openBuilder(),
+      profile:P,profOpen:s.profOpen,toggleProf:()=>this.setState(st=>({profOpen:!st.profOpen})),
+      profiles:Object.entries(PROFILES).map(([id,p])=>({...p,bg:id===s.pid?'#EEF0E2':'transparent',onClick:()=>{this.setState({pid:id,profOpen:false,selSession:null});this.flash(`Switched to ${p.first}`);}})),
+      sTodayFocus:scr==='today'&&v.today==='Focus',sTodayTimeline:scr==='today'&&v.today==='Timeline',sTodayWeek:scr==='today'&&v.today==='Week',
+      focus,hasFocus:!!focus,noFocus:!focus,others,noOthers:others.length===0,week,weekStat:`${wkDone} of ${wkAll} done`,
+      goal:{days:gd,name:P.goal,dateLabel:longDate(P.goalDate)},hours,blocks,tlHeight:(h1-h0)*H+'px',nowTop:((NOW/60-h0)*H-4)+'px',
+      sCal:scr==='calendar',sCalMonth:v.calendar==='Month',sCalWeek:v.calendar==='Week',monthLabel:MON[mi]+' '+D(m0).getUTCFullYear(),prevMonth:shiftM(-1),nextMonth:shiftM(1),
+      goToday:()=>this.setState({calMonth:'2026-10-01',weekStart:wk0,selDate:TODAY}),cells,weekdays:WD,weekLabel,
+      prevWeek:()=>this.setState(st=>({weekStart:add(st.weekStart,-7)})),nextWeek:()=>this.setState(st=>({weekStart:add(st.weekStart,7)})),weekCols,sel,
+      sBuildForm:scr==='builder'&&v.builder==='Form',sBuildGuided:scr==='builder'&&v.builder==='Guided',draft,typeOpts,picker,grpChips,q:s.q,onQ:e=>this.setState({q:e.target.value}),
+      save:()=>this.save(),reset:()=>this.setState({draft:newDraft()}),steps,step1:s.step===1,step2:s.step===2,step3:s.step===3,notStep3:s.step!==3,
+      next:()=>this.setState(st=>({step:Math.min(3,st.step+1)})),back:()=>this.setState(st=>({step:Math.max(1,st.step-1)})),backColor:s.step===1?'#7A7C70':'#1F211A',review,
+      sLibGrid:scr==='strength'&&v.strength==='Grid',sLibGroups:scr==='strength'&&v.strength==='Groups',first:P.first,recNote:P.recNote,
+      recCards:P.rec.map(exVM),libCards:ids.filter(id=>s.grp==='All'||EX[id].group===s.grp).map(exVM),groups,groupEx:groupIds.map(exVM),
+      libGrpLabel:s.libGrp,libGrpRec:nRec?`${nRec} recommended for ${P.first}`:'',
+      hasToast:!!s.toast,toast:s.toast?{msg:s.toast.msg,action:s.toast.action,hasAction:!!s.toast.action,onAction:()=>{s.toast.onAction&&s.toast.onAction();this.setState({toast:null});}}:{}
+    };
+  }
+}
+</script>
+</body>
+</html>

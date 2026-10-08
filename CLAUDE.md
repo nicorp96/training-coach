@@ -38,5 +38,10 @@ Everything must run locally before anything goes live:
 - `pnpm install && pnpm dev`
 Production uses the same containers on a Hetzner VPS (Germany) with Caddy.
 
+## Current state (Phase 0)
+- Only `apps/web` and `packages/core` exist. The web app runs on demo data from `apps/web/src/lib/mock-data.ts` with a Zustand store persisted to localStorage (`apps/web/src/lib/store.ts`). When the API lands, replace the store's data with `packages/api-client` calls; keep components unchanged where possible.
+- Next.js 16 (App Router) + React 19 + Tailwind v4. Read `apps/web/AGENTS.md` and `node_modules/next/dist/docs/` before using unfamiliar Next APIs.
+- Design tokens live in `apps/web/src/app/globals.css` (`@theme`). Use the token classes (`bg-accent`, `text-muted`, `border-line`, …) instead of raw hex values; sport colors come from `SPORTS` in `@tc/core`.
+
 ## Design source
-Visual design comes from the Claude Design prototype `Training Coach v2.dc.html`. Keep tokens (colors, type, spacing, radii) in `packages/ui/tokens` and match the prototype when building screens.
+Visual design comes from the Claude Design prototype `docs/design/Training Coach v2.dc.html` (app name in the design: "Tempo"). Keep tokens (colors, type, spacing, radii) in `packages/ui/tokens` and match the prototype when building screens.
