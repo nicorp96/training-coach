@@ -4,11 +4,13 @@ RUN corepack enable
 WORKDIR /repo
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages/core/package.json packages/core/
+COPY packages/integrations/package.json packages/integrations/
 COPY packages/engine/package.json packages/engine/
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 RUN pnpm install --frozen-lockfile --filter @tc/web...
 COPY packages/core packages/core
+COPY packages/integrations packages/integrations
 COPY packages/engine packages/engine
 COPY apps/api apps/api
 COPY apps/web apps/web

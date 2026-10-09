@@ -4,9 +4,11 @@ RUN corepack enable
 WORKDIR /repo
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages/core/package.json packages/core/
+COPY packages/integrations/package.json packages/integrations/
 COPY apps/api/package.json apps/api/
 RUN pnpm install --frozen-lockfile --filter @tc/api...
 COPY packages/core packages/core
+COPY packages/integrations packages/integrations
 COPY apps/api apps/api
 ENV NODE_ENV=production
 WORKDIR /repo/apps/api
