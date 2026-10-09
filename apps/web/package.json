@@ -9,7 +9,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.104.1",
+    "@tc/api": "workspace:^",
     "@tc/core": "workspace:*",
+    "better-auth": "^1.7.7",
+    "hono": "^4.13.13",
     "next": "^16.4.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

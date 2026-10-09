@@ -4,14 +4,15 @@ import { useRouter } from 'next/navigation';
 import { EXERCISES, EXERCISE_IDS, MUSCLE_GROUPS, getExercise } from '@tc/core';
 import { PageHeader } from '@/components/shell';
 import { AddButton, Chip, cx } from '@/components/ui';
-import { PROFILES } from '@/lib/mock-data';
+import { useAthlete } from '@/lib/queries';
 import { useStore } from '@/lib/store';
 
 export default function StrengthPage() {
   const view = useStore((s) => s.views.strength);
-  const { pid, grp, libGrp, draft, set, toggleDraftExercise, flash } = useStore();
+  const { grp, libGrp, draft, set, toggleDraftExercise, flash } = useStore();
   const router = useRouter();
-  const P = PROFILES[pid];
+  const { data: athlete } = useAthlete();
+  const P = { firstName: athlete?.firstName ?? '', recommendedExercises: athlete?.recommendedExercises ?? [], recommendationNote: athlete?.recommendationNote };
   const rec = (id: string) => P.recommendedExercises.includes(id);
   const ids = [...EXERCISE_IDS].sort((a, b) => Number(rec(b)) - Number(rec(a)));
   const inDraft = (id: string) => draft.exercises.some((e) => e.id === id);
@@ -28,10 +29,10 @@ export default function StrengthPage() {
 
       {view === 'Grid' && (
         <div className="flex flex-col gap-7">
-          <section className="flex flex-col gap-4 rounded-[18px] border border-accent-line bg-accent-tint p-[22px]">
+          {P.recommendedExercises.length > 0 && <section className="flex flex-col gap-4 rounded-[18px] border border-accent-line bg-accent-tint p-[22px]">
             <div className="flex max-w-[640px] flex-col gap-1.5">
               <span className="eyebrow !text-accent">Recommended for {P.firstName}</span>
-              <p className="text-[17px] leading-[1.45] [text-wrap:pretty]">{P.recommendationNote}</p>
+              {P.recommendationNote && <p className="text-[17px] leading-[1.45] [text-wrap:pretty]">{P.recommendationNote}</p>}
             </div>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2.5">
               {P.recommendedExercises.map((id) => {
@@ -47,7 +48,7 @@ export default function StrengthPage() {
                 );
               })}
             </div>
-          </section>
+          </section>}
           <section className="flex flex-col gap-3.5">
             <div className="flex flex-wrap gap-1.5">
               {['All', ...MUSCLE_GROUPS].map((g) => <Chip key={g} active={grp === g} onClick={() => set({ grp: g })} className="!px-[13px] !py-1.5 !text-[13px]">{g}</Chip>)}

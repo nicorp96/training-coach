@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
-import { PROFILES, PROFILE_IDS } from '@/lib/mock-data';
+import { authClient } from '@/lib/api';
+import { useActiveAthleteId, useMe } from '@/lib/queries';
 import { useStore, VIEWS, type Screen } from '@/lib/store';
 import { cx } from './ui';
 
@@ -16,10 +17,15 @@ const NAV: { href: `/${Screen}`; label: string; short: string }[] = [
 ];
 
 export function Shell({ children }: { children: ReactNode }) {
-  // Persisted state lives in localStorage, so render only after hydration to avoid mismatches.
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
   const pathname = usePathname();
+  const router = useRouter();
+  const me = useMe();
+  const unauthorized = (me.error as { status?: number } | null)?.status === 401;
+  useEffect(() => {
+    if (unauthorized) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+  }, [unauthorized, router, pathname]);
+  // Render screens only once we know who is signed in (also avoids hydration mismatches with persisted UI state).
+  const hydrated = !!me.data;
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[208px_minmax(0,1fr)]">
@@ -48,7 +54,9 @@ export function Shell({ children }: { children: ReactNode }) {
         {hydrated && <ProfileSwitcher compact />}
       </div>
 
-      <main className="min-w-0 px-4 pb-28 pt-6 md:px-8 md:pb-14 md:pt-7">{hydrated ? children : null}</main>
+      <main className="min-w-0 px-4 pb-28 pt-6 md:px-8 md:pb-14 md:pt-7">
+        {hydrated ? children : me.isError && !unauthorized ? <LoadError onRetry={() => me.refetch()} /> : <Loading />}
+      </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-line bg-rail pb-[env(safe-area-inset-bottom)] md:hidden">
         {NAV.map((n) => {
@@ -84,32 +92,43 @@ function Avatar({ initials, color, size }: { initials: string; color: string; si
 }
 
 function ProfileSwitcher({ compact }: { compact?: boolean }) {
-  const pid = useStore((s) => s.pid);
-  const switchProfile = useStore((s) => s.switchProfile);
+  const { data: me } = useMe();
+  const activeId = useActiveAthleteId();
+  const set = useStore((s) => s.set);
+  const flash = useStore((s) => s.flash);
+  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const P = PROFILES[pid];
+  if (!me) return null;
+  const P = me.athletes.find((a) => a.id === activeId) ?? me.athletes[0];
+  if (!P) return null;
+  const signOut = async () => {
+    await authClient.signOut();
+    set({ athleteId: null });
+    router.replace('/login');
+  };
 
   return (
     <div className="relative">
       {open && (
         <div className={cx('absolute z-20 flex flex-col gap-0.5 rounded-[14px] border border-line-2 bg-surface p-1.5 shadow-[0_16px_40px_rgba(30,32,20,.14)]', compact ? 'right-0 top-12 w-64' : 'inset-x-0 bottom-16')}>
           <div className="eyebrow px-2.5 pb-1.5 pt-2 !text-[11px]">Switch profile</div>
-          {PROFILE_IDS.map((id) => {
-            const p = PROFILES[id];
-            return (
-              <button
-                key={id}
-                onClick={() => { setOpen(false); if (id !== pid) switchProfile(id); }}
-                className={cx('flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left hover:bg-accent-soft', id === pid && 'bg-accent-soft')}
-              >
-                <Avatar initials={p.initials} color={p.color} size={30} />
-                <span className="flex min-w-0 flex-col">
-                  <span className="text-sm font-medium">{p.name}</span>
-                  <span className="text-xs text-muted">{p.goal}</span>
-                </span>
-              </button>
-            );
-          })}
+          {me.athletes.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => { setOpen(false); if (p.id !== P.id) { set({ athleteId: p.id, selSession: null }); flash(`Switched to ${p.firstName}`); } }}
+              className={cx('flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left hover:bg-accent-soft', p.id === P.id && 'bg-accent-soft')}
+            >
+              <Avatar initials={p.initials} color={p.color} size={30} />
+              <span className="flex min-w-0 flex-col">
+                <span className="text-sm font-medium">{p.name}</span>
+                <span className="text-xs text-muted">{p.goal ?? (p.role === 'owner' ? 'You' : p.role === 'coach' ? 'You coach' : 'Shared with you')}</span>
+              </span>
+            </button>
+          ))}
+          <div className="mt-1 border-t border-line pt-1">
+            <div className="truncate px-2.5 py-1.5 text-xs text-muted">{me.user.email}</div>
+            <button onClick={signOut} className="w-full rounded-[10px] px-2.5 py-2 text-left text-sm text-ink-3 hover:bg-accent-soft">Sign out</button>
+          </div>
         </div>
       )}
       {compact ? (
@@ -121,11 +140,25 @@ function ProfileSwitcher({ compact }: { compact?: boolean }) {
           <Avatar initials={P.initials} color={P.color} size={34} />
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-sm font-medium">{P.name}</span>
-            <span className="truncate text-xs text-muted">{P.goal}</span>
+            <span className="truncate text-xs text-muted">{P.goal ?? me.user.email}</span>
           </span>
           <span className="text-xs text-muted">⇅</span>
         </button>
       )}
+    </div>
+  );
+}
+
+function Loading() {
+  return <div className="py-20 text-center font-mono text-xs uppercase tracking-[.08em] text-faint">Loading…</div>;
+}
+
+function LoadError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="card mx-auto mt-16 flex max-w-md flex-col items-center gap-3 p-8 text-center">
+      <h2 className="text-xl font-semibold">Can’t reach the server</h2>
+      <p className="text-sm text-muted">Is the API running? Start everything with <code className="font-mono">pnpm dev</code>.</p>
+      <button onClick={onRetry} className="rounded-[10px] bg-accent px-4 py-2 text-sm font-semibold text-white">Try again</button>
     </div>
   );
 }

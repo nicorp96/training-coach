@@ -1,0 +1,48 @@
+# Production stack: same containers on a VPS or a home server.
+# Usage (from repo root): docker compose -f infra/docker-compose.prod.yml --env-file .env up -d --build
+name: tempo
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: coach
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: training_coach
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U coach -d training_coach']
+      interval: 5s
+      retries: 10
+
+  api:
+    build: { context: .., dockerfile: apps/api/Dockerfile }
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://coach:${POSTGRES_PASSWORD}@postgres:5432/training_coach
+      APP_URL: ${APP_URL:?set APP_URL in .env}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
+      BETTER_AUTH_TELEMETRY: '0'
+      SIGNUP_ALLOWED_EMAILS: ${SIGNUP_ALLOWED_EMAILS:-}
+    depends_on: { postgres: { condition: service_healthy } }
+
+  web:
+    build: { context: .., dockerfile: apps/web/Dockerfile }
+    restart: unless-stopped
+    depends_on: [api]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ['${HTTP_PORT:-80}:80', '${HTTPS_PORT:-443}:443']
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [web, api]
+
+volumes:
+  pgdata:
+  caddy_data:

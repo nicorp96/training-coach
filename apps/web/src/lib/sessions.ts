@@ -2,17 +2,17 @@
 
 import { useMemo } from 'react';
 import {
+  DEVICE_PROVIDERS,
   SPORTS,
   fromMinutes,
   getExercise,
   localIso,
   shortDate,
   toMinutes,
-  type PlannedSession,
+  type SessionDto,
   type SessionSource,
 } from '@tc/core';
-import { DEVICES, generateSessions } from './mock-data';
-import { useStore } from './store';
+import { useDevices } from './queries';
 
 export const SOURCES: Record<SessionSource, { label: string; long: string; bg: string; color: string }> = {
   coach: { label: 'Coach', long: 'Planned by your coach', bg: '#E9EDD6', color: '#4A5620' },
@@ -20,26 +20,16 @@ export const SOURCES: Record<SessionSource, { label: string; long: string; bg: s
   past: { label: 'Repeat', long: 'Repeated from', bg: '#F1ECE1', color: '#6E5A35' },
 };
 
-export const sourceLong = (x: Pick<PlannedSession, 'source' | 'repeatedFrom'>) =>
+export const sourceLong = (x: { source: SessionSource; repeatedFrom?: string | null }) =>
   x.source === 'past' && x.repeatedFrom ? `${SOURCES.past.long} ${shortDate(x.repeatedFrom)}` : SOURCES[x.source].long;
 
 export function useToday() {
   return useMemo(() => localIso(), []);
 }
 
-/** All sessions of the active profile, sorted by date and time. */
-export function useSessions() {
-  const pid = useStore((s) => s.pid);
-  const custom = useStore((s) => s.customSessions[pid]);
-  const today = useToday();
-  const generated = useMemo(() => generateSessions(pid, today), [pid, today]);
-  return useMemo(
-    () => [...generated, ...custom].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)),
-    [generated, custom],
-  );
-}
-
 export type SessionExerciseView = {
+  rowId: string;
+  index: number;
   n: string;
   name: string;
   group: string;
@@ -50,7 +40,7 @@ export type SessionExerciseView = {
   done: boolean;
 };
 
-export type SessionView = PlannedSession & {
+export type SessionView = SessionDto & {
   sportLabel: string;
   color: string;
   end: string;
@@ -64,18 +54,19 @@ export type SessionView = PlannedSession & {
 
 /** Derives display state (progress, completion, status) for a session. */
 export function useSessionView() {
-  const doneExercises = useStore((s) => s.doneExercises);
-  const completed = useStore((s) => s.completed);
-  const devices = useStore((s) => s.devices[s.pid]);
+  const { data: devices } = useDevices();
   const today = useToday();
-  const syncName = DEVICES.find((d) => devices?.[d.id]?.connected && devices[d.id]?.importActivities)?.short ?? '';
+  const sync = devices?.find((d) => d.connected && d.importActivities);
+  const syncName = sync ? DEVICE_PROVIDERS.find((p) => p.id === sync.provider)!.short : '';
 
-  return (x: PlannedSession): SessionView => {
+  return (x: SessionDto): SessionView => {
     const sport = SPORTS[x.sport];
     const past = x.date < today;
     const exs = x.exercises.map((e, i) => {
       const E = getExercise(e.id);
       return {
+        rowId: e.rowId,
+        index: i,
         n: String(i + 1).padStart(2, '0'),
         name: E.name,
         group: E.group,
@@ -83,11 +74,11 @@ export function useSessionView() {
         cue: E.cue,
         rx: `${e.sets} × ${e.reps}`,
         load: e.load,
-        done: past || !!doneExercises[`${x.id}:${i}`],
+        done: e.done,
       };
     });
     const nDone = exs.filter((e) => e.done).length;
-    const complete = past || !!completed[x.id] || (exs.length > 0 && nDone === exs.length);
+    const complete = !!x.completedAt || (exs.length > 0 && nDone === exs.length);
     return {
       ...x,
       sportLabel: sport.label,

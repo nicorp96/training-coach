@@ -16,7 +16,8 @@ import {
 } from '@tc/core';
 import { PageHeader } from '@/components/shell';
 import { Chip, Dot, Eyebrow, SourceBadge, cx } from '@/components/ui';
-import { SOURCES, useSessionView, useSessions, useToday } from '@/lib/sessions';
+import { useSessionsRange } from '@/lib/queries';
+import { SOURCES, useSessionView, useToday } from '@/lib/sessions';
 import { useStore, type SourceFilter } from '@/lib/store';
 
 const FILTERS: [SourceFilter, string][] = [['all', 'All'], ['coach', 'Coach'], ['me', 'You'], ['past', 'Repeat']];
@@ -26,7 +27,6 @@ export default function CalendarPage() {
   const { calMonth, weekStart, selDate, srcFilter, set, goToDate, updateDraft } = useStore();
   const router = useRouter();
   const today = useToday();
-  const all = useSessions();
   const sv = useSessionView();
 
   const byDate = (d: string) => all.filter((x) => x.date === d);
@@ -38,6 +38,8 @@ export default function CalendarPage() {
   const nCells = Math.ceil((weekday(calMonth) + dim) / 7) * 7;
   const gridStart = startOfWeek(calMonth);
   const cells = Array.from({ length: nCells }, (_, i) => addDays(gridStart, i));
+  const [from, to] = view === 'Month' ? [gridStart, addDays(gridStart, nCells - 1)] : [weekStart, addDays(weekStart, 6)];
+  const { data: all = [] } = useSessionsRange(from < selDate ? from : selDate, to > selDate ? to : selDate);
 
   const we = addDays(weekStart, 6);
   const weekLabel = monthIndex(weekStart) === monthIndex(we)

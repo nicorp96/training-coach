@@ -1,0 +1,35 @@
+{
+  "name": "@tc/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
+    "start": "node --import tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file-if-exists=../../.env src/db/migrate.ts",
+    "db:seed": "tsx --env-file-if-exists=../../.env src/db/seed.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.4",
+    "@hono/zod-validator": "^0.9.1",
+    "@tc/core": "workspace:*",
+    "better-auth": "^1.7.7",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.13",
+    "postgres": "^3.4.9",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "drizzle-kit": "^0.31.11",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.3"
+  }
+}

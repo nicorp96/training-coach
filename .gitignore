@@ -16,3 +16,4 @@ coverage/
 # Next.js
 next-env.d.ts
 *.tsbuildinfo
+backups/

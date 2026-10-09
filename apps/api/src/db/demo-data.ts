@@ -1,34 +1,42 @@
-// Demo data ported from the design prototype. Replaced by the API (apps/api) in Phase 1.
+// Demo data from the design prototype, used by `pnpm db:seed --demo` for local development.
 import {
   addDays,
   startOfWeek,
   weekday,
-  type AthleteProfile,
-  type DeviceConnection,
+  type CreateSessionInput,
   type DeviceProvider,
-  type PlannedSession,
-  type SessionExercise,
   type SessionSource,
   type SportId,
 } from '@tc/core';
 
+type DemoProfile = {
+  name: string;
+  color: string;
+  goal: string;
+  goalDate: string;
+  recommendedExercises: string[];
+  recommendationNote: string;
+};
+type DemoDevice = { connected: boolean; importActivities: boolean; pushWorkouts: boolean; lastSyncMinAgo: number };
+type SessionExercise = { id: string; sets: number; reps: string; load: string };
+
 export type ProfileId = 'lena' | 'jonas' | 'mia';
 
-export const PROFILES: Record<ProfileId, AthleteProfile> = {
+export const PROFILES: Record<ProfileId, DemoProfile> = {
   lena: {
-    id: 'lena', name: 'Lena Hoffmann', firstName: 'Lena', initials: 'LH', color: '#5C6B24',
+    name: 'Lena Hoffmann', color: '#5C6B24',
     goal: 'Hamburg Half Marathon', goalDate: '2026-11-22',
     recommendedExercises: ['split', 'rdl', 'calf', 'hipthrust', 'deadbug', 'pallof'],
     recommendationNote: 'Single-leg stability, posterior chain and anti-rotation core: the strength work that carries over to running.',
   },
   jonas: {
-    id: 'jonas', name: 'Jonas Weber', firstName: 'Jonas', initials: 'JW', color: '#C2562B',
+    name: 'Jonas Weber', color: '#C2562B',
     goal: 'Squat 120 kg', goalDate: '2026-11-30',
     recommendedExercises: ['squat', 'bench', 'row', 'ohp', 'pullup', 'rdl'],
     recommendationNote: 'Compound lifts for your strength block. Add load weekly and keep one or two reps in reserve.',
   },
   mia: {
-    id: 'mia', name: 'Mia Hoffmann', firstName: 'Mia', initials: 'MH', color: '#3F6FB5',
+    name: 'Mia Hoffmann', color: '#3F6FB5',
     goal: 'U17 season opener', goalDate: '2026-10-31',
     recommendedExercises: ['lunge', 'pushup', 'plank', 'bridge', 'calf', 'deadbug'],
     recommendationNote: 'Bodyweight basics that support football: balance, core control and injury prevention.',
@@ -48,11 +56,11 @@ export const DEVICES: { id: DeviceProvider; name: string; short: string; sub: st
   { id: 'coros', name: 'COROS', short: 'COROS', sub: 'PACE, APEX, VERTIX' },
 ];
 
-export const DEFAULT_DEVICES: Record<ProfileId, Partial<Record<DeviceProvider, DeviceConnection>>> = {
-  lena: { garmin: { connected: true, importActivities: true, pushWorkouts: true, lastSync: '4 min ago' } },
+export const DEFAULT_DEVICES: Record<ProfileId, Partial<Record<DeviceProvider, DemoDevice>>> = {
+  lena: { garmin: { connected: true, importActivities: true, pushWorkouts: true, lastSyncMinAgo: 4 } },
   jonas: {
-    wahoo: { connected: true, importActivities: true, pushWorkouts: true, lastSync: '1 h ago' },
-    garmin: { connected: true, importActivities: true, pushWorkouts: false, lastSync: '1 h ago' },
+    wahoo: { connected: true, importActivities: true, pushWorkouts: true, lastSyncMinAgo: 60 },
+    garmin: { connected: true, importActivities: true, pushWorkouts: false, lastSyncMinAgo: 60 },
   },
   mia: {},
 };
@@ -67,6 +75,7 @@ type Ex = [id: string, sets: number, reps: string, load: string];
 type Tpl = [sport: SportId, title: string, time: string, dur: number, ex?: Ex[], note?: string];
 const S = (sport: SportId, title: string, time: string, dur: number, ex: Ex[] | 0 = 0, note = ''): Tpl => [sport, title, time, dur, ex || [], note];
 const toEx = (ex: Ex[]): SessionExercise[] => ex.map(([id, sets, reps, load]) => ({ id, sets, reps, load }));
+
 
 /** Weekly template per profile, Monday … Sunday. */
 const WEEK_TEMPLATES: Record<ProfileId, Tpl[][]> = {
@@ -105,26 +114,20 @@ const WEEK_SOURCES: Record<ProfileId, SessionSource[][]> = {
   mia: [['me'], ['coach'], ['coach', 'me'], ['past'], ['me'], ['me'], []],
 };
 
-/** Expand the weekly template into sessions around `today`. Deterministic, so it is not persisted. */
-export function generateSessions(pid: ProfileId, today: string): PlannedSession[] {
-  const out: PlannedSession[] = [];
+/** Expand the weekly template into sessions from 6 weeks before to 10 weeks after `today`. */
+export function generateSessions(pid: ProfileId, today: string): CreateSessionInput[] {
+  const out: CreateSessionInput[] = [];
   const end = addDays(startOfWeek(today), 7 * 10);
   for (let d = addDays(startOfWeek(today), -7 * 6); d < end; d = addDays(d, 1)) {
     const wd = weekday(d);
-    WEEK_TEMPLATES[pid][wd]!.forEach(([sport, title, time, dur, ex, note], i) =>
+    WEEK_TEMPLATES[pid][wd]!.forEach(([sport, title, time, durationMin, ex, note], i) => {
+      const source = WEEK_SOURCES[pid][wd]![i] ?? 'coach';
       out.push({
-        id: `${pid}-${d}-${i}`,
-        date: d,
-        sport,
-        title,
-        time,
-        durationMin: dur,
-        exercises: toEx(ex ?? []),
-        note: note ?? '',
-        source: WEEK_SOURCES[pid][wd]![i] ?? 'coach',
-        repeatedFrom: addDays(d, -7),
-      }),
-    );
+        date: d, sport, title, time, durationMin, note: note ?? '', source,
+        repeatedFrom: source === 'past' ? addDays(d, -7) : null,
+        exercises: (ex ?? []).map(([exerciseId, sets, reps, load]) => ({ exerciseId, sets, reps, load })),
+      });
+    });
   }
   return out;
 }

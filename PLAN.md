@@ -14,9 +14,11 @@ without a rewrite.
 | Topic | Decision | Source |
 |---|---|---|
 | Repo | Public GitHub repo `training-coach` | confirmed |
-| Hosting | EU only (GDPR, health data) | confirmed |
+| Hosting | EU only (GDPR, health data); options compared in `docs/hosting-options.md` | confirmed |
 | Budget | Very small monthly cost (target ≤ €10/month at launch) | confirmed |
 | Rollout | Fully working locally first, then go live | confirmed |
+| First users | Owner + partner (2 users); invite-only sign-up | confirmed |
+| Backend | See `docs/architecture/backend.md` (Hono + Better Auth + Drizzle/Postgres) | done (Phase 0) |
 | Team | Solo developer + Claude Code, part-time | **assumed** |
 | UI language | English first, i18n-ready from day 1, German as second locale | **assumed** |
 | MVP roles | Athlete (self-coached) fully; Coach/Admin modeled + basic coach view | **assumed** |

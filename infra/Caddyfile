@@ -1,0 +1,11 @@
+# SITE_ADDRESS: a domain (e.g. tempo.example.com) for automatic HTTPS,
+# or ":80" for plain HTTP inside a private network (Tailscale).
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	handle /api/* {
+		reverse_proxy api:4000
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+}

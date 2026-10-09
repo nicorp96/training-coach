@@ -5,23 +5,24 @@ import { useEffect, useState } from 'react';
 import { WEEKDAYS, addDays, dayOfMonth, daysBetween, longDate, startOfWeek, tint, toMinutes } from '@tc/core';
 import { PageHeader } from '@/components/shell';
 import { Check, CompleteButton, Dot, Eyebrow, ProgressBar, SourceBadge, cx } from '@/components/ui';
-import { COACH_NOTES, PROFILES } from '@/lib/mock-data';
-import { useSessionView, useSessions, useToday, type SessionView } from '@/lib/sessions';
+import { useAthlete, useSessionsRange, useToggleExercise, useUpdateSession } from '@/lib/queries';
+import { useSessionView, useToday, type SessionView } from '@/lib/sessions';
 import { useStore } from '@/lib/store';
 
 const greeting = (h: number) => (h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening');
 
 export default function TodayPage() {
-  const pid = useStore((s) => s.pid);
   const view = useStore((s) => s.views.today);
   const selSession = useStore((s) => s.selSession);
   const set = useStore((s) => s.set);
   const goToDate = useStore((s) => s.goToDate);
   const router = useRouter();
   const today = useToday();
-  const all = useSessions();
+  const wk0 = startOfWeek(today);
+  const { data: all = [] } = useSessionsRange(wk0, addDays(wk0, 6));
+  const { data: P } = useAthlete();
   const sv = useSessionView();
-  const P = PROFILES[pid];
+  if (!P) return null;
 
   const todays = all.filter((x) => x.date === today).map(sv);
   const focusId = (selSession && todays.some((t) => t.id === selSession) ? selSession : (todays.find((t) => t.exs.length) ?? todays[0])?.id) ?? null;
@@ -29,7 +30,6 @@ export default function TodayPage() {
   const others = todays.filter((t) => t.id !== focusId);
   const select = (id: string) => set({ selSession: id });
 
-  const wk0 = startOfWeek(today);
   let wkDone = 0, wkAll = 0;
   const week = WEEKDAYS.map((wd, i) => {
     const d = addDays(wk0, i);
@@ -46,7 +46,7 @@ export default function TodayPage() {
 
       {view === 'Focus' && (
         <div className="flex flex-wrap items-start gap-5">
-          {focus ? <FocusCard s={focus} note={COACH_NOTES[pid]} /> : <RestDay />}
+          {focus ? <FocusCard s={focus} note={P.coachNote} /> : <RestDay />}
           <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-4">
             <section className="card flex flex-col gap-3 p-5">
               <Eyebrow>Also today</Eyebrow>
@@ -74,12 +74,12 @@ export default function TodayPage() {
                 ))}
               </div>
             </section>
-            <section className="flex flex-col gap-1 rounded-2xl bg-accent p-5 text-white">
+            {P.goal && P.goalDate && <section className="flex flex-col gap-1 rounded-2xl bg-accent p-5 text-white">
               <span className="font-mono text-[11.5px] uppercase tracking-[.08em]">Goal</span>
               <div className="mt-1.5 flex items-baseline gap-2.5"><span className="text-[56px] font-bold leading-none tracking-[-0.04em]">{daysBetween(today, P.goalDate)}</span><span className="text-[15px] font-medium">days to go</span></div>
               <div className="mt-1.5 text-base font-semibold">{P.goal}</div>
               <div className="font-mono text-xs">{longDate(P.goalDate)}</div>
-            </section>
+            </section>}
           </div>
         </div>
       )}
@@ -111,9 +111,17 @@ export default function TodayPage() {
 }
 
 function useCompletion(s: SessionView) {
-  const setCompleted = useStore((st) => st.setCompleted);
-  const toggleExerciseDone = useStore((st) => st.toggleExerciseDone);
-  return { onComplete: () => setCompleted(s.id, !s.complete), onToggle: (i: number) => toggleExerciseDone(s.id, i) };
+  const update = useUpdateSession();
+  const toggle = useToggleExercise();
+  const flash = useStore((st) => st.flash);
+  const onError = (e: Error) => flash(`Couldn’t save: ${e.message}`);
+  return {
+    onComplete: () => update.mutate({ id: s.id, completed: !s.complete }, { onError }),
+    onToggle: (i: number) => {
+      const e = s.exs[i]!;
+      toggle.mutate({ sessionId: s.id, rowId: e.rowId, done: !e.done }, { onError });
+    },
+  };
 }
 
 function RestDay() {
@@ -125,7 +133,7 @@ function RestDay() {
   );
 }
 
-function FocusCard({ s, note }: { s: SessionView; note: string }) {
+function FocusCard({ s, note }: { s: SessionView; note: string | null }) {
   const { onComplete, onToggle } = useCompletion(s);
   return (
     <section className="card min-w-0 flex-[1.7_1_460px] overflow-hidden !rounded-[18px]">
@@ -142,13 +150,13 @@ function FocusCard({ s, note }: { s: SessionView; note: string }) {
           <div className="flex justify-between font-mono text-xs text-muted"><span>{s.progress}</span><span>{s.exs.length} exercises</span></div>
           <ProgressBar pct={s.pct} />
         </div>
-        <div className="flex items-start gap-3 rounded-xl bg-accent-tint px-4 py-3.5">
+        {note && <div className="flex items-start gap-3 rounded-xl bg-accent-tint px-4 py-3.5">
           <span className="grid h-7 w-7 flex-none place-items-center rounded-lg bg-accent text-[13px] font-bold text-white">C</span>
           <div className="flex flex-col gap-[3px]">
             <span className="font-mono text-[11px] uppercase tracking-[.08em] text-accent-ink">Coach note</span>
             <p className="text-[14.5px] leading-[1.45] text-ink-2 [text-wrap:pretty]">{note}</p>
           </div>
-        </div>
+        </div>}
       </div>
       {s.exs.map((e, i) => (
         <div key={i} onClick={() => onToggle(i)} className="grid cursor-pointer grid-cols-[22px_minmax(0,1fr)_auto] items-center gap-3.5 border-t border-line px-5 py-4 hover:bg-hover md:grid-cols-[32px_26px_minmax(0,1fr)_auto_84px] md:px-7">

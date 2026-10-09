@@ -1,12 +1,26 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { EXERCISES, EXERCISE_IDS, MUSCLE_GROUPS, SPORTS, getExercise, longDate, shortDate, type SportId } from '@tc/core';
+import { EXERCISES, EXERCISE_IDS, MUSCLE_GROUPS, SPORTS, addDays, getExercise, longDate, shortDate, type SessionExercise, type SessionSource, type SportId } from '@tc/core';
 import { PageHeader } from '@/components/shell';
 import { AddButton, Check, Chip, Dot, Eyebrow, cx } from '@/components/ui';
-import { COACH_SUGGESTIONS, PROFILES } from '@/lib/mock-data';
-import { useSessionView, useSessions, useToday } from '@/lib/sessions';
-import { useStore, type StartMode } from '@/lib/store';
+import { useAthlete, useCreateSession, useSessionsRange, useSuggestions } from '@/lib/queries';
+import { useSessionView, useToday } from '@/lib/sessions';
+import { newDraft, useStore, type StartMode } from '@/lib/store';
+
+type PlanLike = { title: string; sport: SportId; durationMin: number; exercises: SessionExercise[]; date?: string };
+
+function useLoadPlan() {
+  const updateDraft = useStore((s) => s.updateDraft);
+  const flash = useStore((s) => s.flash);
+  return (p: PlanLike, source: SessionSource, key: string) => {
+    updateDraft({
+      title: p.title, sport: p.sport, dur: String(p.durationMin), exercises: p.exercises.map((e) => ({ ...e })),
+      source, repeatedFrom: p.date ?? null, pick: key,
+    });
+    flash(source === 'coach' ? `Loaded coach plan “${p.title}”` : `Copied “${p.title}” from ${shortDate(p.date!)}`);
+  };
+}
 
 const START: [StartMode, string, string][] = [
   ['blank', 'Start from scratch', 'Build it yourself'],
@@ -57,10 +71,10 @@ function UseButton({ active, onClick, label }: { active: boolean; onClick: () =>
 }
 
 function PastPlans() {
-  const all = useSessions();
   const today = useToday();
+  const { data: all = [], isLoading } = useSessionsRange(addDays(today, -60), addDays(today, -1));
   const pick = useStore((s) => s.draft.pick);
-  const loadPlan = useStore((s) => s.loadPlan);
+  const loadPlan = useLoadPlan();
   const seen = new Set<string>();
   const past = all
     .filter((x) => x.date < today && x.exercises.length)
@@ -77,22 +91,24 @@ function PastPlans() {
             <span className="font-mono text-[11px] text-repeat">{shortDate(x.date)} · {x.exercises.length} exercises · {x.durationMin} min</span>
             <span className="text-base font-semibold">{x.title}</span>
             <span className="text-[12.5px] leading-[1.4] text-muted">{x.exercises.map((e) => getExercise(e.id).name).join(', ')}</span>
-            <UseButton active={a} label="Use this" onClick={() => loadPlan({ ...x, date: x.date }, 'past', key)} />
+            <UseButton active={a} label="Use this" onClick={() => loadPlan({ ...x, exercises: x.exercises.map(({ id, sets, reps, load }) => ({ id, sets, reps, load })) }, 'past', key)} />
           </div>
         );
       })}
+      {!isLoading && past.length === 0 && <p className="text-sm text-muted">No strength sessions in the last 60 days yet.</p>}
     </div>
   );
 }
 
 function CoachPlans() {
-  const pid = useStore((s) => s.pid);
+  const { data: suggestions = [], isLoading } = useSuggestions();
   const pick = useStore((s) => s.draft.pick);
-  const loadPlan = useStore((s) => s.loadPlan);
+  const loadPlan = useLoadPlan();
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2.5">
-      {COACH_SUGGESTIONS[pid].map((p, i) => {
-        const key = 'c' + i, a = pick === key, T = SPORTS[p.sport];
+      {!isLoading && suggestions.length === 0 && <p className="text-sm text-muted">No suggestions from your coach right now.</p>}
+      {suggestions.map((p) => {
+        const key = 'c' + p.id, a = pick === key, T = SPORTS[p.sport];
         return (
           <div key={key} className="flex flex-col gap-2 rounded-[14px] bg-accent-tint p-4" style={{ border: `1.5px solid ${a ? 'var(--color-accent)' : 'var(--color-line)'}` }}>
             <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[.05em]" style={{ color: T.color }}>
@@ -111,9 +127,10 @@ function CoachPlans() {
 /** Shared builder state + derived lists for both layouts. */
 function useBuilder() {
   const s = useStore();
-  const P = PROFILES[s.pid];
+  const { data: athlete } = useAthlete();
+  const P = { recommendedExercises: athlete?.recommendedExercises ?? [] };
   const d = s.draft;
-  const sportOpts = (Object.keys(SPORTS) as SportId[]).filter((k) => s.sports[s.pid].includes(k) || d.sport === k);
+  const sportOpts = (Object.keys(SPORTS) as SportId[]).filter((k) => (athlete?.sports ?? []).includes(k) || d.sport === k);
   const q = s.q.trim().toLowerCase();
   const recommended = (id: string) => P.recommendedExercises.includes(id);
   const ids = [...EXERCISE_IDS].sort((a, b) => Number(recommended(b)) - Number(recommended(a)));
@@ -169,9 +186,32 @@ function SetsStepper({ sets, onChange, small }: { sets: number; onChange: (n: nu
 }
 
 function useSave() {
-  const saveDraft = useStore((s) => s.saveDraft);
+  const create = useCreateSession();
   const router = useRouter();
-  return () => { saveDraft(); router.push('/calendar'); };
+  const { draft: d, flash, goToDate, set } = useStore();
+  return () => {
+    const sport = SPORTS[d.sport];
+    const title = d.title.trim() || `${sport.label} session`;
+    const distanceKm = parseFloat(d.dist) || null;
+    create.mutate(
+      {
+        date: d.date, time: d.time || '07:00', durationMin: parseInt(d.dur) || 45, sport: d.sport, title,
+        note: sport.endurance && (distanceKm || d.target) ? [distanceKm && `${distanceKm} km`, d.target].filter(Boolean).join(' · ') : '',
+        source: d.source, repeatedFrom: d.repeatedFrom,
+        distanceKm: sport.endurance ? distanceKm : null, target: sport.endurance ? d.target || null : null,
+        exercises: d.exercises.map((e) => ({ exerciseId: e.id, sets: e.sets, reps: e.reps, load: e.load })),
+      },
+      {
+        onSuccess: (s) => {
+          set({ draft: newDraft(), step: 1, startMode: 'blank' });
+          goToDate(s.date);
+          flash(`Saved “${s.title}” to ${shortDate(s.date)}`);
+          router.push('/calendar');
+        },
+        onError: (e) => flash(`Couldn’t save: ${e.message}`),
+      },
+    );
+  };
 }
 
 function FormBuilder() {
@@ -254,8 +294,9 @@ function GuidedBuilder() {
   const save = useSave();
   const step = s.step;
   const review = sv({
-    id: 'draft', date: d.date, sport: d.sport, title: d.title.trim() || `${SPORTS[d.sport].label} session`, time: d.time || '07:00',
-    durationMin: parseInt(d.dur) || 45, exercises: d.exercises, note: '', source: d.source, repeatedFrom: d.repeatedFrom,
+    id: 'draft', athleteId: '', date: d.date, sport: d.sport, title: d.title.trim() || `${SPORTS[d.sport].label} session`, time: d.time || '07:00',
+    durationMin: parseInt(d.dur) || 45, note: '', source: d.source, repeatedFrom: d.repeatedFrom, completedAt: null, rpe: null, feeling: null,
+    exercises: d.exercises.map((e, i) => ({ ...e, rowId: String(i), done: false })),
   });
 
   return (
