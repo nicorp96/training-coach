@@ -1,6 +1,7 @@
 // API contract shared by apps/api (validation) and clients (types, form validation).
 import { z } from 'zod';
 import { SPORT_IDS, type SportId } from './sports';
+import { THRESHOLD_INFO, THRESHOLD_METRICS, type ThresholdMetric, type Thresholds } from './thresholds';
 
 export const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD');
 export const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:mm');
@@ -56,6 +57,23 @@ export const updateDeviceInput = z
   .object({ connected: z.boolean(), importActivities: z.boolean(), pushWorkouts: z.boolean() })
   .partial();
 
+export const thresholdMetric = z.enum(THRESHOLD_METRICS);
+
+const thresholdValues = z.object(
+  Object.fromEntries(
+    THRESHOLD_METRICS.map((m) => [m, z.number().min(THRESHOLD_INFO[m].min).max(THRESHOLD_INFO[m].max).nullable().optional()]),
+  ) as Record<ThresholdMetric, z.ZodOptional<z.ZodNullable<z.ZodNumber>>>,
+);
+
+export const updateProfileInput = z.object({
+  name: z.string().trim().min(1).max(80).optional(),
+  goal: z.string().trim().max(120).nullable().optional(),
+  goalDate: isoDate.nullable().optional(),
+  /** SI units; null clears a value. Changed values start a new history entry valid from today. */
+  thresholds: thresholdValues.optional(),
+});
+export type UpdateProfileInput = z.infer<typeof updateProfileInput>;
+
 export const shareAccessInput = z.object({ email: z.email(), role: z.enum(['coach', 'viewer']) });
 
 // ---- Response DTOs ----
@@ -103,7 +121,12 @@ export type AthleteDto = AthleteSummaryDto & {
   recommendationNote: string | null;
   recommendedExercises: string[];
   sports: SportId[];
+  thresholds: Thresholds;
+  /** Date each current threshold has been valid from. */
+  thresholdsSince: Partial<Record<ThresholdMetric, string>>;
 };
+
+export type ThresholdEntryDto = { metric: ThresholdMetric; value: number | null; validFrom: string };
 
 export type MeDto = {
   user: { id: string; name: string; email: string };

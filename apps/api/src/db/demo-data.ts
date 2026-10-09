@@ -7,6 +7,7 @@ import {
   type DeviceProvider,
   type SessionSource,
   type SportId,
+  type ThresholdMetric,
 } from '@tc/core';
 
 type DemoProfile = {
@@ -63,6 +64,16 @@ export const DEFAULT_DEVICES: Record<ProfileId, Partial<Record<DeviceProvider, D
     garmin: { connected: true, importActivities: true, pushWorkouts: false, lastSyncMinAgo: 60 },
   },
   mia: {},
+};
+
+/** Threshold history per athlete: [daysAgo, values]. Pace given in seconds per km, converted on insert. */
+export const DEMO_THRESHOLDS: Record<ProfileId, [number, Partial<Record<ThresholdMetric, number>>][]> = {
+  lena: [
+    [84, { thresholdSpeed: 320, lthr: 170, maxHr: 191, restingHr: 54, weight: 62, ftp: 180 }],
+    [21, { thresholdSpeed: 305, lthr: 172, restingHr: 52, weight: 61 }],
+  ],
+  jonas: [[40, { maxHr: 186, restingHr: 60, weight: 84 }]],
+  mia: [[30, { maxHr: 204, restingHr: 56, weight: 55, thresholdSpeed: 290 }]],
 };
 
 export const COACH_NOTES: Record<ProfileId, string> = {

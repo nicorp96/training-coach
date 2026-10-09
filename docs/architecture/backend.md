@@ -94,7 +94,9 @@ All routes are under `/api`. Auth uses the Better Auth cookie.
 POST /api/auth/*                                  Better Auth (sign-up, sign-in, sign-out, session)
 GET  /api/v1/me                                   user + accessible athletes (with role)
 GET  /api/v1/catalog                              sports + exercises
-GET  /api/v1/athletes/:aid                        profile, sports, recommendations, goal
+GET  /api/v1/athletes/:aid                        profile, sports, recommendations, goal, current thresholds
+PATCH /api/v1/athletes/:aid                      name, goal, goal date, thresholds (SI units; changes start a history entry)
+GET  /api/v1/athletes/:aid/thresholds             threshold history (newest first)
 PUT  /api/v1/athletes/:aid/sports                 set active sports
 GET  /api/v1/athletes/:aid/sessions?from&to       planned sessions with exercises
 POST /api/v1/athletes/:aid/sessions               create (builder "Save training")

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { AthleteDto, MeDto, SessionDto } from '@tc/core';
+import type { AthleteDto, MeDto, SessionDto, ThresholdEntryDto } from '@tc/core';
 import { app } from '../src/app';
+import { updateProfile } from '../src/services/athletes';
 
 const ORIGIN = 'http://localhost:3000';
 
@@ -95,5 +96,39 @@ describe('API', () => {
     expect(a.sports.sort()).toEqual(['ride', 'run']);
     const devices = (await (await call(`/athletes/${athleteId}/devices/garmin`, { method: 'PUT', body: JSON.stringify({ connected: true }) })).json()) as { provider: string; connected: boolean }[];
     expect(devices.find((d) => d.provider === 'garmin')?.connected).toBe(true);
+  });
+
+  it('updates profile and keeps a threshold history', async () => {
+    const { call, athleteId } = await signUp('thr@example.com', 'Theo Rad');
+    const patch = (body: object) => call(`/athletes/${athleteId}`, { method: 'PATCH', body: JSON.stringify(body) });
+
+    // An older FTP test, as if entered months ago.
+    await updateProfile(athleteId, { thresholds: { ftp: 230 } }, '2026-01-15');
+
+    const res = await patch({ name: 'Theo Rader', goal: 'Ötztaler', goalDate: '2027-08-29', thresholds: { ftp: 250, lthr: 168, weight: 72 } });
+    expect(res.status).toBe(200);
+    const a = (await res.json()) as AthleteDto;
+    expect(a).toMatchObject({ name: 'Theo Rader', initials: 'TR', goal: 'Ötztaler', goalDate: '2027-08-29' });
+    expect(a.thresholds).toMatchObject({ ftp: 250, lthr: 168, weight: 72, maxHr: null, thresholdSpeed: null });
+
+    // A second edit on the same day replaces that day's entry; clearing a value is recorded too.
+    const b = (await (await patch({ thresholds: { ftp: 255, weight: null } })).json()) as AthleteDto;
+    expect(b.thresholds).toMatchObject({ ftp: 255, weight: null, lthr: 168 });
+
+    const history = (await (await call(`/athletes/${athleteId}/thresholds`)).json()) as ThresholdEntryDto[];
+    expect(history.filter((h) => h.metric === 'ftp').map((h) => [h.value, h.validFrom])).toEqual([
+      [255, b.thresholdsSince.ftp], [230, '2026-01-15'],
+    ]);
+
+    expect((await patch({ thresholds: { ftp: 5000 } })).status).toBe(400);
+  });
+
+  it('does not let viewers edit the profile', async () => {
+    const a = await signUp('owner2@example.com', 'Owner Two');
+    const v = await signUp('viewer2@example.com', 'Viewer Two');
+    await a.call(`/athletes/${a.athleteId}/access`, { method: 'POST', body: JSON.stringify({ email: 'viewer2@example.com', role: 'viewer' }) });
+    const res = await v.call(`/athletes/${a.athleteId}`, { method: 'PATCH', body: JSON.stringify({ thresholds: { ftp: 200 } }) });
+    expect(res.status).toBe(403);
+    expect((await v.call(`/athletes/${a.athleteId}/thresholds`)).status).toBe(200);
   });
 });

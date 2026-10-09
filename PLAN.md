@@ -228,7 +228,7 @@ Effort assumes solo dev + Claude Code, ~10–15 h/week. "w" = calendar weeks.
 - ✅ Milestone: `pnpm dev` runs whole stack locally; login works.
 
 ### Phase 1 — MVP core (≈6–8 w)
-- Profile (sports, thresholds, availability, equipment) + zone calculation.
+- ✅ Profile (sports, thresholds with history) + zone calculation (power, HR, pace). Open: availability, equipment.
 - Workout builder (run + ride), templates, duplicate.
 - Calendar (month/week/day, DnD), Today view, mark done + feedback.
 - Goals + plan phases + multi-week plans.

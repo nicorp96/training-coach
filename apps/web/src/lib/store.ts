@@ -19,10 +19,12 @@ export const VIEWS = {
   calendar: ['Month', 'Week'],
   builder: ['Form', 'Guided'],
   strength: ['Grid', 'Groups'],
+  profile: ['Bars', 'Table'],
   settings: ['Cards', 'List'],
 } as const;
 export type Screen = keyof typeof VIEWS;
 type ViewState = { [K in Screen]: (typeof VIEWS)[K][number] };
+const DEFAULT_VIEWS: ViewState = { today: 'Focus', calendar: 'Month', builder: 'Form', strength: 'Grid', profile: 'Bars', settings: 'Cards' };
 
 export type Draft = {
   title: string;
@@ -86,7 +88,7 @@ export const useStore = create<State & Actions>()(
   persist(
     (set, get) => ({
       athleteId: null,
-      views: { today: 'Focus', calendar: 'Month', builder: 'Form', strength: 'Grid', settings: 'Cards' },
+      views: DEFAULT_VIEWS,
       selSession: null,
       calMonth: startOfMonth(today()),
       weekStart: startOfWeek(today()),
@@ -127,7 +129,12 @@ export const useStore = create<State & Actions>()(
     }),
     {
       name: 'training-coach-ui',
-      version: 2,
+      version: 3,
+      // v3 added the profile screen; keep stored views but fill in new screens.
+      migrate: (persisted) => {
+        const p = persisted as { athleteId?: string | null; views?: Partial<ViewState> } | undefined;
+        return { athleteId: p?.athleteId ?? null, views: { ...DEFAULT_VIEWS, ...p?.views } } as never;
+      },
       partialize: (s) => ({ athleteId: s.athleteId, views: s.views }),
     },
   ),

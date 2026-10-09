@@ -13,6 +13,7 @@ const NAV: { href: `/${Screen}`; label: string; short: string }[] = [
   { href: '/calendar', label: 'Calendar', short: 'Calendar' },
   { href: '/builder', label: 'New training', short: 'New' },
   { href: '/strength', label: 'Strength exercises', short: 'Strength' },
+  { href: '/profile', label: 'Profile & zones', short: 'Profile' },
   { href: '/settings', label: 'Settings', short: 'Settings' },
 ];
 
@@ -58,11 +59,11 @@ export function Shell({ children }: { children: ReactNode }) {
         {hydrated ? children : me.isError && !unauthorized ? <LoadError onRetry={() => me.refetch()} /> : <Loading />}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-line bg-rail pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-6 border-t border-line bg-rail pb-[env(safe-area-inset-bottom)] md:hidden">
         {NAV.map((n) => {
           const active = pathname.startsWith(n.href);
           return (
-            <Link key={n.href} href={n.href} className={cx('flex flex-col items-center gap-1 py-2.5 text-[11.5px] font-medium', active ? 'text-accent' : 'text-muted')}>
+            <Link key={n.href} href={n.href} className={cx('flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium', active ? 'text-accent' : 'text-muted')}>
               <span className="h-[3px] w-5 rounded-sm" style={{ background: active ? 'var(--color-accent)' : 'transparent' }} />
               {n.short}
             </Link>

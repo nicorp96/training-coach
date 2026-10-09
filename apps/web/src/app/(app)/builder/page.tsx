@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { EXERCISES, EXERCISE_IDS, MUSCLE_GROUPS, SPORTS, addDays, getExercise, longDate, shortDate, type SessionExercise, type SessionSource, type SportId } from '@tc/core';
+import { formatZone, zonesFor } from '@tc/engine';
 import { PageHeader } from '@/components/shell';
 import { AddButton, Check, Chip, Dot, Eyebrow, cx } from '@/components/ui';
 import { useAthlete, useCreateSession, useSessionsRange, useSuggestions } from '@/lib/queries';
@@ -160,7 +161,27 @@ function DetailFields({ guided }: { guided?: boolean }) {
           <label className="flex flex-col gap-1.5"><Label guided={guided}>{guided ? 'Target pace or power' : 'Target'}</Label><input className={f} placeholder={sport.targetHint} value={d.target} onChange={(e) => s.updateDraft({ target: e.target.value })} /></label>
         </div>
       )}
+      {sport.zoneKind && <ZoneChips kind={sport.zoneKind} />}
     </>
+  );
+}
+
+/** One-tap targets from the athlete's zones (Profile & zones). */
+function ZoneChips({ kind }: { kind: 'pace' | 'power' }) {
+  const { data: athlete } = useAthlete();
+  const target = useStore((s) => s.draft.target);
+  const updateDraft = useStore((s) => s.updateDraft);
+  const zones = athlete && zonesFor(athlete.thresholds)[kind];
+  if (!zones) {
+    return <span className="text-[12.5px] text-muted">Tip: add your {kind === 'pace' ? 'threshold pace' : 'FTP'} under Profile &amp; zones to pick targets from your zones.</span>;
+  }
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {zones.map((z) => {
+        const label = `${z.id} ${z.name} · ${formatZone(z, kind)}`;
+        return <Chip key={z.id} active={target === label} onClick={() => updateDraft({ target: label })}><span className="font-mono">{z.id}</span> {formatZone(z, kind)}</Chip>;
+      })}
+    </div>
   );
 }
 

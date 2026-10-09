@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
 
 const config: NextConfig = {
-  transpilePackages: ['@tc/core', '@tc/api'],
+  transpilePackages: ['@tc/core', '@tc/engine', '@tc/api'],
   output: 'standalone',
   outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
   async rewrites() {

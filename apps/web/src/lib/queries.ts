@@ -10,6 +10,8 @@ import type {
   SessionDto,
   SportId,
   SuggestionDto,
+  ThresholdEntryDto,
+  UpdateProfileInput,
   UpdateSessionInput,
 } from '@tc/core';
 import { api, unwrap } from './api';
@@ -22,6 +24,7 @@ export const keys = {
   sessionsRange: (aid: string, from: string, to: string) => ['sessions', aid, from, to] as const,
   suggestions: (aid: string) => ['suggestions', aid] as const,
   devices: (aid: string) => ['devices', aid] as const,
+  thresholds: (aid: string) => ['thresholds', aid] as const,
 };
 
 export function useMe() {
@@ -70,6 +73,15 @@ export function useDevices() {
     queryKey: keys.devices(aid ?? ''),
     enabled: !!aid,
     queryFn: () => unwrap<DeviceDto[]>(api.athletes[':aid'].devices.$get({ param: { aid: aid! } })),
+  });
+}
+
+export function useThresholdHistory() {
+  const aid = useActiveAthleteId();
+  return useQuery({
+    queryKey: keys.thresholds(aid ?? ''),
+    enabled: !!aid,
+    queryFn: () => unwrap<ThresholdEntryDto[]>(api.athletes[':aid'].thresholds.$get({ param: { aid: aid! } })),
   });
 }
 
@@ -141,6 +153,20 @@ export function useSetSports() {
   return useMutation({
     mutationFn: (sports: SportId[]) => unwrap<AthleteDto>(api.athletes[':aid'].sports.$put({ param: { aid: aid! }, json: { sports } })),
     onSuccess: (a) => qc.setQueryData(keys.athlete(a.id), a),
+  });
+}
+
+export function useUpdateProfile() {
+  const qc = useQueryClient();
+  const aid = useActiveAthleteId();
+  return useMutation({
+    mutationFn: (input: UpdateProfileInput) => unwrap<AthleteDto>(api.athletes[':aid'].$patch({ param: { aid: aid! }, json: input })),
+    onSuccess: (a) => {
+      qc.setQueryData(keys.athlete(a.id), a);
+      // Name, initials and goal also show in the profile switcher.
+      qc.invalidateQueries({ queryKey: keys.me });
+      qc.invalidateQueries({ queryKey: keys.thresholds(a.id) });
+    },
   });
 }
 

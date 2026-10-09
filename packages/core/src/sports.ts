@@ -12,11 +12,13 @@ export type Sport = {
   endurance: boolean;
   /** Placeholder shown for the target field in the training builder. */
   targetHint?: string;
+  /** Which threshold-based zones set this sport's targets (see @tc/engine). */
+  zoneKind?: 'pace' | 'power';
 };
 
 export const SPORTS: Record<SportId, Sport> = {
-  run: { id: 'run', label: 'Running', color: '#C2562B', description: 'Easy, tempo, intervals, long', endurance: true, targetHint: 'e.g. 5:30 /km' },
-  ride: { id: 'ride', label: 'Road bike', color: '#2F6F73', description: 'Endurance, sweet spot, climbs', endurance: true, targetHint: 'e.g. 180–200 W' },
+  run: { id: 'run', label: 'Running', color: '#C2562B', description: 'Easy, tempo, intervals, long', endurance: true, targetHint: 'e.g. 5:30 /km', zoneKind: 'pace' },
+  ride: { id: 'ride', label: 'Road bike', color: '#2F6F73', description: 'Endurance, sweet spot, climbs', endurance: true, targetHint: 'e.g. 180–200 W', zoneKind: 'power' },
   strength: { id: 'strength', label: 'Strength', color: '#5C6B24', description: 'Gym and bodyweight', endurance: false },
   mobility: { id: 'mobility', label: 'Mobility', color: '#3F6FB5', description: 'Stretching and recovery', endurance: false },
   sport: { id: 'sport', label: 'Team sport', color: '#7D5BB0', description: 'Practice or match', endurance: false },

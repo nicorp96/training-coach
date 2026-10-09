@@ -2,6 +2,7 @@ import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   date,
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -130,6 +131,18 @@ export const athleteExerciseRec = pgTable('athlete_exercise_rec', {
   exerciseId: text('exercise_id').notNull().references(() => exercise.id, { onDelete: 'cascade' }),
   position: integer('position').notNull(),
 }, (t) => [primaryKey({ columns: [t.athleteId, t.exerciseId] })]);
+
+export const thresholdMetric = pgEnum('threshold_metric', ['ftp', 'thresholdSpeed', 'lthr', 'maxHr', 'restingHr', 'weight']);
+
+/** Threshold history: one row per change, so later load metrics can use the value valid on a given day. */
+export const athleteThreshold = pgTable('athlete_threshold', {
+  athleteId: uuid('athlete_id').notNull().references(() => athlete.id, { onDelete: 'cascade' }),
+  metric: thresholdMetric('metric').notNull(),
+  /** SI units (W, m/s, bpm, kg). NULL = cleared from this date on. */
+  value: doublePrecision('value'),
+  validFrom: date('valid_from').notNull(),
+  ...timestamps,
+}, (t) => [primaryKey({ columns: [t.athleteId, t.metric, t.validFrom] })]);
 
 // ---------------------------------------------------------------------------
 // Planning

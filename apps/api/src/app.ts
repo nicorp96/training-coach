@@ -9,6 +9,7 @@ import {
   setSportsInput,
   shareAccessInput,
   updateDeviceInput,
+  updateProfileInput,
   updateSessionExerciseInput,
   updateSessionInput,
   type MeDto,
@@ -18,7 +19,15 @@ import { db } from './db/client';
 import { env } from './env';
 import { exercise, sport } from './db/schema';
 import { requireAthlete } from './policy';
-import { getAthlete, listAthletesForUser, listSuggestions, setSports, shareAthlete } from './services/athletes';
+import {
+  getAthlete,
+  listAthletesForUser,
+  listSuggestions,
+  listThresholdHistory,
+  setSports,
+  shareAthlete,
+  updateProfile,
+} from './services/athletes';
 import { listDevices, updateDevice } from './services/devices';
 import {
   createSession,
@@ -75,6 +84,17 @@ const v1 = new Hono<Env>()
     const { aid } = c.req.valid('param');
     const role = await requireAthlete(c.get('user').id, aid, 'read');
     return c.json(await getAthlete(aid, role));
+  })
+  .patch('/athletes/:aid', athleteParam, validate('json', updateProfileInput), async (c) => {
+    const { aid } = c.req.valid('param');
+    const role = await requireAthlete(c.get('user').id, aid, 'write');
+    await updateProfile(aid, c.req.valid('json'));
+    return c.json(await getAthlete(aid, role));
+  })
+  .get('/athletes/:aid/thresholds', athleteParam, async (c) => {
+    const { aid } = c.req.valid('param');
+    await requireAthlete(c.get('user').id, aid, 'read');
+    return c.json(await listThresholdHistory(aid));
   })
   .put('/athletes/:aid/sports', athleteParam, validate('json', setSportsInput), async (c) => {
     const { aid } = c.req.valid('param');

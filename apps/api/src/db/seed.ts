@@ -1,8 +1,8 @@
 import { eq, sql as dsql } from 'drizzle-orm';
-import { EXERCISES, SPORTS, localIso } from '@tc/core';
+import { EXERCISES, SPORTS, addDays, localIso, speedFromPace, type ThresholdMetric } from '@tc/core';
 import { db, sql } from './client';
-import { athlete, athleteAccess, athleteExerciseRec, athleteSport, deviceConnection, exercise, sport, suggestion, user } from './schema';
-import { COACH_NOTES, COACH_SUGGESTIONS, DEFAULT_DEVICES, DEFAULT_SPORTS, PROFILES, PROFILE_IDS, generateSessions } from './demo-data';
+import { athlete, athleteAccess, athleteExerciseRec, athleteSport, athleteThreshold, deviceConnection, exercise, sport, suggestion, user } from './schema';
+import { COACH_NOTES, COACH_SUGGESTIONS, DEFAULT_DEVICES, DEFAULT_SPORTS, DEMO_THRESHOLDS, PROFILES, PROFILE_IDS, generateSessions } from './demo-data';
 
 /** Upserts the global sport and exercise catalog from @tc/core. Safe to run on every start. */
 export async function seedCatalog() {
@@ -64,6 +64,11 @@ export async function seedDemo() {
     await db.insert(athleteSport).values(DEFAULT_SPORTS[pid].map((sportId) => ({ athleteId: aid, sportId })));
     await db.insert(athleteExerciseRec).values(P.recommendedExercises.map((exerciseId, position) => ({ athleteId: aid, exerciseId, position })));
     await db.insert(suggestion).values(COACH_SUGGESTIONS[pid].map((s) => ({ athleteId: aid, title: s.title, sportId: s.sport, durationMin: s.durationMin, why: s.why, exercises: s.exercises })));
+    await db.insert(athleteThreshold).values(DEMO_THRESHOLDS[pid].flatMap(([daysAgo, values]) =>
+      Object.entries(values).map(([metric, v]) => ({
+        athleteId: aid, metric: metric as ThresholdMetric, validFrom: addDays(today, -daysAgo),
+        value: metric === 'thresholdSpeed' ? speedFromPace(v) : v,
+      }))));
     const devices = Object.entries(DEFAULT_DEVICES[pid]);
     if (devices.length) {
       await db.insert(deviceConnection).values(devices.map(([provider, d]) => ({
