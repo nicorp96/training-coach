@@ -1,11 +1,27 @@
 import { and, asc, eq, gte, inArray, lte } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
-import type { CreateSessionInput, SessionDto, SportId, UpdateSessionInput } from '@tc/core';
+import type { ActivityDto, CreateSessionInput, SessionDto, SportId, UpdateSessionInput } from '@tc/core';
 import { createSessionInput } from '@tc/core';
 import { db } from '../db/client';
-import { exercise, plannedSession, sessionExercise } from '../db/schema';
+import { activity, exercise, plannedSession, sessionExercise } from '../db/schema';
 
-type SessionRow = typeof plannedSession.$inferSelect & { exercises: (typeof sessionExercise.$inferSelect)[] };
+type ActivityRow = typeof activity.$inferSelect;
+type SessionRow = typeof plannedSession.$inferSelect & { exercises: (typeof sessionExercise.$inferSelect)[]; activities: ActivityRow[] };
+
+const activityDto = (a: ActivityRow): ActivityDto => ({
+  id: a.id,
+  provider: a.provider,
+  externalUrl: `https://www.strava.com/activities/${a.externalId}`,
+  name: a.name,
+  movingSec: a.movingSec,
+  distanceM: a.distanceM,
+  elevationGainM: a.elevationGainM,
+  avgHr: a.avgHr,
+  maxHr: a.maxHr,
+  avgWatts: a.avgWatts,
+  normalizedWatts: a.normalizedWatts,
+  avgSpeed: a.avgSpeed,
+});
 
 const toDto = (s: SessionRow): SessionDto => ({
   id: s.id,
@@ -24,9 +40,10 @@ const toDto = (s: SessionRow): SessionDto => ({
   exercises: [...s.exercises]
     .sort((a, b) => a.position - b.position)
     .map((e) => ({ rowId: e.id, id: e.exerciseId, sets: e.sets, reps: e.reps, load: e.load, done: !!e.doneAt })),
+  activity: s.activities[0] ? activityDto(s.activities[0]) : null,
 });
 
-const withExercises = { exercises: true } as const;
+const withExercises = { exercises: true, activities: true } as const;
 
 export async function listSessions(athleteId: string, from: string, to: string): Promise<SessionDto[]> {
   const rows = await db.query.plannedSession.findMany({

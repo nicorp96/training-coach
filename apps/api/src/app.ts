@@ -30,6 +30,14 @@ import {
 } from './services/athletes';
 import { listDevices, updateDevice } from './services/devices';
 import {
+  completeStravaConnect,
+  disconnectStrava,
+  listIntegrations,
+  startStravaConnect,
+  syncStrava,
+  verifyStravaCallback,
+} from './services/integrations';
+import {
   createSession,
   deleteSession,
   getSession,
@@ -140,6 +148,43 @@ const v1 = new Hono<Env>()
       return c.json(await updateDevice(aid, provider, c.req.valid('json')));
     },
   )
+  .get('/athletes/:aid/integrations', athleteParam, async (c) => {
+    const { aid } = c.req.valid('param');
+    await requireAthlete(c.get('user').id, aid, 'read');
+    return c.json(await listIntegrations(aid));
+  })
+  // Connecting someone's Strava account is for the profile owner only.
+  .post('/athletes/:aid/integrations/strava/connect', athleteParam, async (c) => {
+    const { aid } = c.req.valid('param');
+    await requireAthlete(c.get('user').id, aid, 'share');
+    return c.json({ url: startStravaConnect(aid, c.get('user').id) });
+  })
+  .post('/athletes/:aid/integrations/strava/sync', athleteParam, async (c) => {
+    const { aid } = c.req.valid('param');
+    await requireAthlete(c.get('user').id, aid, 'write');
+    return c.json(await syncStrava(aid));
+  })
+  .delete('/athletes/:aid/integrations/strava', athleteParam, async (c) => {
+    const { aid } = c.req.valid('param');
+    await requireAthlete(c.get('user').id, aid, 'share');
+    await disconnectStrava(aid);
+    return c.body(null, 204);
+  })
+  // Strava redirects the browser here after the user approved (or denied) access.
+  .get('/integrations/strava/callback', async (c) => {
+    const back = (status: string, msg?: string) =>
+      c.redirect(`${env.APP_URL}/settings?strava=${status}${msg ? `&msg=${encodeURIComponent(msg)}` : ''}`);
+    try {
+      const uid = c.get('user').id;
+      const aid = verifyStravaCallback(uid, c.req.query());
+      await requireAthlete(uid, aid, 'share');
+      await completeStravaConnect(aid, uid, c.req.query('code')!);
+      const r = await syncStrava(aid).catch(() => null);
+      return back('connected', r ? `${r.imported}` : undefined);
+    } catch (e) {
+      return back('error', e instanceof HTTPException ? e.message : 'Something went wrong');
+    }
+  })
   .get('/sessions/:sid', sessionParam, async (c) => {
     const { sid } = c.req.valid('param');
     await authorizeSession(c, sid, 'read');

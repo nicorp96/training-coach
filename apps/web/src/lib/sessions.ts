@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import {
-  DEVICE_PROVIDERS,
   SPORTS,
   fromMinutes,
   getExercise,
@@ -12,12 +11,12 @@ import {
   type SessionDto,
   type SessionSource,
 } from '@tc/core';
-import { useDevices } from './queries';
 
 export const SOURCES: Record<SessionSource, { label: string; long: string; bg: string; color: string }> = {
   coach: { label: 'Coach', long: 'Planned by your coach', bg: '#E9EDD6', color: '#4A5620' },
   me: { label: 'You', long: 'Added by you', bg: '#ECECE5', color: '#2F3129' },
   past: { label: 'Repeat', long: 'Repeated from', bg: '#F1ECE1', color: '#6E5A35' },
+  import: { label: 'Logged', long: 'Logged on Strava, not planned', bg: '#FFF1E9', color: '#B4441A' },
 };
 
 export const sourceLong = (x: { source: SessionSource; repeatedFrom?: string | null }) =>
@@ -54,10 +53,7 @@ export type SessionView = SessionDto & {
 
 /** Derives display state (progress, completion, status) for a session. */
 export function useSessionView() {
-  const { data: devices } = useDevices();
   const today = useToday();
-  const sync = devices?.find((d) => d.connected && d.importActivities);
-  const syncName = sync ? DEVICE_PROVIDERS.find((p) => p.id === sync.provider)!.short : '';
 
   return (x: SessionDto): SessionView => {
     const sport = SPORTS[x.sport];
@@ -90,7 +86,7 @@ export function useSessionView() {
       progress: exs.length ? `${nDone} of ${exs.length} done` : complete ? 'Done' : 'Not started',
       pct: exs.length ? (nDone / exs.length) * 100 : complete ? 100 : 0,
       statusLabel: complete
-        ? sport.endurance && past && syncName ? `Done · ${syncName}` : 'Done'
+        ? x.activity ? 'Done · Strava' : 'Done'
         : x.date === today ? 'Today' : past ? 'Missed' : 'Planned',
     };
   };

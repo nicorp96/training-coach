@@ -19,6 +19,7 @@
     "@hono/node-server": "^2.1.4",
     "@hono/zod-validator": "^0.9.1",
     "@tc/core": "workspace:*",
+    "@tc/integrations": "workspace:*",
     "better-auth": "^1.7.7",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.13",

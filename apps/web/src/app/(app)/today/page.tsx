@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { WEEKDAYS, addDays, dayOfMonth, daysBetween, longDate, startOfWeek, tint, toMinutes } from '@tc/core';
+import { ActivityLine } from '@/components/activity';
 import { PageHeader } from '@/components/shell';
 import { Check, CompleteButton, Dot, Eyebrow, ProgressBar, SourceBadge, cx } from '@/components/ui';
 import { useAthlete, useSessionsRange, useToggleExercise, useUpdateSession } from '@/lib/queries';
@@ -150,6 +151,7 @@ function FocusCard({ s, note }: { s: SessionView; note: string | null }) {
           <div className="flex justify-between font-mono text-xs text-muted"><span>{s.progress}</span><span>{s.exs.length} exercises</span></div>
           <ProgressBar pct={s.pct} />
         </div>
+        {s.activity && <ActivityLine activity={s.activity} sport={s.sport} />}
         {note && <div className="flex items-start gap-3 rounded-xl bg-accent-tint px-4 py-3.5">
           <span className="grid h-7 w-7 flex-none place-items-center rounded-lg bg-accent text-[13px] font-bold text-white">C</span>
           <div className="flex flex-col gap-[3px]">
@@ -231,6 +233,7 @@ function TimelineDetail({ s }: { s: SessionView }) {
         </div>
         <div className="flex items-center gap-3"><ProgressBar pct={s.pct} /><span className="font-mono text-xs text-muted">{s.progress}</span></div>
         {s.exs.length === 0 && <p className="text-[15px] leading-normal text-ink-3">{s.note}</p>}
+        {s.activity && <ActivityLine activity={s.activity} sport={s.sport} />}
       </div>
       {s.exs.map((e, i) => (
         <div key={i} onClick={() => onToggle(i)} className="card grid cursor-pointer grid-cols-[26px_minmax(0,1fr)_auto] items-start gap-4 !rounded-[14px] px-5 py-[18px] hover:border-line-strong">
@@ -258,6 +261,7 @@ function FocusTiles({ s }: { s: SessionView }) {
         <div className="flex items-center gap-3.5"><span className="font-mono text-xs text-muted">{s.progress}</span><CompleteButton complete={s.complete} onClick={onComplete} small /></div>
       </div>
       {s.exs.length === 0 && <p className="text-[15px] text-ink-3">{s.note}</p>}
+      {s.activity && <ActivityLine activity={s.activity} sport={s.sport} />}
       <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">
         {s.exs.map((e, i) => (
           <button key={i} onClick={() => onToggle(i)} className="flex min-h-[190px] flex-col gap-3.5 rounded-2xl bg-surface p-[18px] text-left" style={{ border: `1.5px solid ${e.done ? 'var(--color-accent)' : 'var(--color-line)'}` }}>

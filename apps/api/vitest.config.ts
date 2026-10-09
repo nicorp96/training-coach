@@ -11,6 +11,8 @@ export default defineConfig({
       APP_URL: 'http://localhost:3000',
       BETTER_AUTH_SECRET: 'test-secret-test-secret-test-secret-123',
       BETTER_AUTH_TELEMETRY: '0',
+      STRAVA_CLIENT_ID: 'test-client',
+      STRAVA_CLIENT_SECRET: 'test-secret',
     },
     fileParallelism: false,
   },

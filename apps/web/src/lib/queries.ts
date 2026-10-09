@@ -6,10 +6,12 @@ import type {
   CreateSessionInput,
   DeviceDto,
   DeviceProvider,
+  IntegrationDto,
   MeDto,
   SessionDto,
   SportId,
   SuggestionDto,
+  SyncResultDto,
   ThresholdEntryDto,
   UpdateProfileInput,
   UpdateSessionInput,
@@ -25,6 +27,7 @@ export const keys = {
   suggestions: (aid: string) => ['suggestions', aid] as const,
   devices: (aid: string) => ['devices', aid] as const,
   thresholds: (aid: string) => ['thresholds', aid] as const,
+  integrations: (aid: string) => ['integrations', aid] as const,
 };
 
 export function useMe() {
@@ -82,6 +85,15 @@ export function useThresholdHistory() {
     queryKey: keys.thresholds(aid ?? ''),
     enabled: !!aid,
     queryFn: () => unwrap<ThresholdEntryDto[]>(api.athletes[':aid'].thresholds.$get({ param: { aid: aid! } })),
+  });
+}
+
+export function useIntegrations() {
+  const aid = useActiveAthleteId();
+  return useQuery({
+    queryKey: keys.integrations(aid ?? ''),
+    enabled: !!aid,
+    queryFn: () => unwrap<IntegrationDto[]>(api.athletes[':aid'].integrations.$get({ param: { aid: aid! } })),
   });
 }
 
@@ -185,5 +197,35 @@ export function useShareAccess() {
   return useMutation({
     mutationFn: (input: { email: string; role: 'coach' | 'viewer' }) =>
       unwrap<{ ok: boolean }>(api.athletes[':aid'].access.$post({ param: { aid: aid! }, json: input })),
+  });
+}
+
+/** Starts the Strava OAuth flow: the browser leaves the app and comes back to /settings. */
+export function useConnectStrava() {
+  const aid = useActiveAthleteId();
+  return useMutation({
+    mutationFn: () => unwrap<{ url: string }>(api.athletes[':aid'].integrations.strava.connect.$post({ param: { aid: aid! } })),
+    onSuccess: ({ url }) => window.location.assign(url),
+  });
+}
+
+export function useSyncStrava() {
+  const qc = useQueryClient();
+  const aid = useActiveAthleteId();
+  return useMutation({
+    mutationFn: () => unwrap<SyncResultDto>(api.athletes[':aid'].integrations.strava.sync.$post({ param: { aid: aid! } })),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: keys.integrations(aid!) });
+      qc.invalidateQueries({ queryKey: keys.sessions(aid!) });
+    },
+  });
+}
+
+export function useDisconnectStrava() {
+  const qc = useQueryClient();
+  const aid = useActiveAthleteId();
+  return useMutation({
+    mutationFn: () => unwrap<void>(api.athletes[':aid'].integrations.strava.$delete({ param: { aid: aid! } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.integrations(aid!) }),
   });
 }

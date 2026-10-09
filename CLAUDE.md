@@ -39,10 +39,11 @@ Everything must run locally before anything goes live:
 Production uses the same containers on a Hetzner VPS (Germany) with Caddy.
 
 ## Current state (Phase 0 done, Phase 1 in progress)
-- Exists: `apps/web`, `apps/api`, `packages/core`, `packages/engine` (pure training science: zones so far, unit-tested). Not yet: `packages/db` (schema lives in `apps/api/src/db` until the worker needs it), `apps/worker`, `packages/api-client` (the typed client is `@tc/api/client`, built on `hono/client`).
+- Exists: `apps/web`, `apps/api`, `packages/core`, `packages/engine` (pure training science: zones so far, unit-tested), `packages/integrations` (Strava, read-only `ActivitySource`). Not yet: `packages/db` (schema lives in `apps/api/src/db` until the worker needs it), `apps/worker`, `packages/api-client` (the typed client is `@tc/api/client`, built on `hono/client`).
 - Backend design: `docs/architecture/backend.md`. Follow its layering: routes → services → db, with authorization only via `requireAthlete()` in `apps/api/src/policy.ts`.
 - Web: server state via TanStack Query hooks in `apps/web/src/lib/queries.ts`; Zustand (`lib/store.ts`) holds UI state only. Never put server data in Zustand.
 - Thresholds (FTP, threshold speed in m/s, LTHR, max/resting HR, weight) live in `athlete_threshold` as a history (`valid_from`); the current value is the latest one valid today. Zones are computed on the fly by `@tc/engine`, never stored. Sports pick their zone type via `zoneKind` in the sport registry.
+- Imported activities: `activity` table, matched to planned sessions in `services/integrations.ts`; unplanned ones become sessions with source `import`. Strava sync runs in-request for now (manual + on connect); move to webhooks + worker at go-live.
 - Schema changes: edit `apps/api/src/db/schema.ts`, then `pnpm --filter @tc/api db:generate --name <change>`; migrations apply automatically on API start. Add/adjust tests in `apps/api/test`.
 - Next.js 16 (App Router) + React 19 + Tailwind v4. Read `apps/web/AGENTS.md` and `node_modules/next/dist/docs/` before using unfamiliar Next APIs.
 - Design tokens live in `apps/web/src/app/globals.css` (`@theme`). Use the token classes (`bg-accent`, `text-muted`, `border-line`, …) instead of raw hex values; sport colors come from `SPORTS` in `@tc/core`.

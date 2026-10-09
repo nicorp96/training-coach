@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { EXERCISES, EXERCISE_IDS, MUSCLE_GROUPS, SPORTS, addDays, getExercise, longDate, shortDate, type SessionExercise, type SessionSource, type SportId } from '@tc/core';
+import { EXERCISES, EXERCISE_IDS, MUSCLE_GROUPS, SPORTS, addDays, getExercise, longDate, shortDate, type SessionExercise, type PlannedSource, type SportId } from '@tc/core';
 import { formatZone, zonesFor } from '@tc/engine';
 import { PageHeader } from '@/components/shell';
 import { AddButton, Check, Chip, Dot, Eyebrow, cx } from '@/components/ui';
@@ -14,7 +14,7 @@ type PlanLike = { title: string; sport: SportId; durationMin: number; exercises:
 function useLoadPlan() {
   const updateDraft = useStore((s) => s.updateDraft);
   const flash = useStore((s) => s.flash);
-  return (p: PlanLike, source: SessionSource, key: string) => {
+  return (p: PlanLike, source: PlannedSource, key: string) => {
     updateDraft({
       title: p.title, sport: p.sport, dur: String(p.durationMin), exercises: p.exercises.map((e) => ({ ...e })),
       source, repeatedFrom: p.date ?? null, pick: key,
@@ -316,7 +316,7 @@ function GuidedBuilder() {
   const step = s.step;
   const review = sv({
     id: 'draft', athleteId: '', date: d.date, sport: d.sport, title: d.title.trim() || `${SPORTS[d.sport].label} session`, time: d.time || '07:00',
-    durationMin: parseInt(d.dur) || 45, note: '', source: d.source, repeatedFrom: d.repeatedFrom, completedAt: null, rpe: null, feeling: null,
+    durationMin: parseInt(d.dur) || 45, note: '', source: d.source, repeatedFrom: d.repeatedFrom, completedAt: null, rpe: null, feeling: null, activity: null,
     exercises: d.exercises.map((e, i) => ({ ...e, rowId: String(i), done: false })),
   });
 

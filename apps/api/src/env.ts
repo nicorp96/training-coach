@@ -8,6 +8,9 @@ const schema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32, 'BETTER_AUTH_SECRET must be at least 32 characters'),
   /** Comma-separated list. If set, only these emails can create an account. */
   SIGNUP_ALLOWED_EMAILS: z.string().optional(),
+  /** Strava API app (strava.com/settings/api). Both unset = Strava import disabled. */
+  STRAVA_CLIENT_ID: z.string().optional(),
+  STRAVA_CLIENT_SECRET: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

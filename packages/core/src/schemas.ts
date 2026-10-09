@@ -1,12 +1,14 @@
 // API contract shared by apps/api (validation) and clients (types, form validation).
 import { z } from 'zod';
 import { SPORT_IDS, type SportId } from './sports';
+import type { SessionSource } from './types';
 import { THRESHOLD_INFO, THRESHOLD_METRICS, type ThresholdMetric, type Thresholds } from './thresholds';
 
 export const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD');
 export const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:mm');
 
 export const sportId = z.enum(SPORT_IDS as [SportId, ...SportId[]]);
+/** Sources a client may set. `import` is only set by the server for unplanned imported activities. */
 export const sessionSource = z.enum(['coach', 'me', 'past']);
 export const accessRole = z.enum(['owner', 'coach', 'viewer']);
 export const deviceProvider = z.enum(['garmin', 'wahoo', 'coros']);
@@ -97,13 +99,43 @@ export type SessionDto = {
   sport: SportId;
   title: string;
   note: string;
-  source: z.infer<typeof sessionSource>;
+  source: SessionSource;
   repeatedFrom: string | null;
   completedAt: string | null;
   rpe: number | null;
   feeling: number | null;
   exercises: SessionExerciseDto[];
+  /** The imported activity that fulfilled this session, if any. */
+  activity: ActivityDto | null;
 };
+
+export type ActivityDto = {
+  id: string;
+  provider: 'strava';
+  externalUrl: string;
+  name: string;
+  movingSec: number;
+  distanceM: number | null;
+  elevationGainM: number | null;
+  avgHr: number | null;
+  maxHr: number | null;
+  avgWatts: number | null;
+  normalizedWatts: number | null;
+  /** m/s */
+  avgSpeed: number | null;
+};
+
+export type IntegrationDto = {
+  provider: 'strava';
+  /** False when the server has no Strava API credentials configured. */
+  available: boolean;
+  connected: boolean;
+  lastSyncAt: string | null;
+  lastError: string | null;
+  activityCount: number;
+};
+
+export type SyncResultDto = { imported: number; matched: number; created: number };
 
 export type AthleteSummaryDto = {
   id: string;

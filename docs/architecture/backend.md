@@ -107,6 +107,11 @@ GET  /api/v1/athletes/:aid/suggestions            coach suggestions
 GET  /api/v1/athletes/:aid/devices                device connections
 PUT  /api/v1/athletes/:aid/devices/:provider      connect/disconnect/toggle options (simulated until partner APIs)
 POST /api/v1/athletes/:aid/access                 share: give another user (by email) coach/viewer access
+GET  /api/v1/athletes/:aid/integrations           Strava status (available, connected, last sync, activity count)
+POST /api/v1/athletes/:aid/integrations/strava/connect   owner only → { url } of Strava's consent screen
+GET  /api/v1/integrations/strava/callback         OAuth callback → stores encrypted tokens, first sync, redirects to /settings
+POST /api/v1/athletes/:aid/integrations/strava/sync      import new activities (coach/owner)
+DELETE /api/v1/athletes/:aid/integrations/strava  revoke at Strava + forget tokens (imported activities stay)
 GET  /api/health
 ```
 
@@ -122,7 +127,13 @@ GET  /api/health
 - Every athlete-scoped query goes through `policy.ts`. Tests cover "user B can't read user A's sessions".
 - Auth routes are rate-limited (Better Auth built-in).
 - No health data in logs: the request logger prints method, path, status and duration only.
-- Device OAuth tokens (later) are encrypted with AES-256-GCM using `ENCRYPTION_KEY`.
+- Integration OAuth tokens are encrypted with AES-256-GCM (`src/crypto.ts`), key derived via HKDF from `BETTER_AUTH_SECRET`. OAuth `state` is HMAC-signed, bound to user + athlete, valid 10 minutes, and authorization is checked before tokens are stored.
+
+## Activity import (Strava)
+
+- `packages/integrations` implements the read-only `ActivitySource` port for Strava (scope `read,activity:read_all`) and maps Strava activities to SI units. Unsupported sports (swim, walk, …) are skipped.
+- Imported activities live in `activity` (unique per provider + external id, so re-syncs are idempotent). Each is linked to the planned session it fulfilled: same day and sport, not yet linked, closest start time; that session is marked complete. An activity with no plan becomes a session with source `import` ("Logged").
+- Sync currently runs in the request (on connect and "Sync now"); that is fine for a handful of users. At go-live it moves to Strava webhooks + `apps/worker` (pg-boss), as the architecture rules require for background work.
 
 ## Deployment shape
 

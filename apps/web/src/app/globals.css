@@ -33,6 +33,10 @@
   --color-danger: #c2562b;
   /* Heart-rate zones (distinct from the run sport color). */
   --color-hr: #b23a5b;
+  /* Strava brand orange, only for Strava-sourced data. */
+  --color-strava: #e34402;
+  --color-strava-soft: #fff4ee;
+  --color-strava-line: #fbd5c2;
   --color-repeat: #6e5a35;
 }
 

@@ -15,6 +15,13 @@
       "when": 1791556494326,
       "tag": "0001_athlete_thresholds",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791557489431,
+      "tag": "0002_strava_activities",
+      "breakpoints": true
     }
   ]
 }

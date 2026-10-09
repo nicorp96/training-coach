@@ -14,13 +14,14 @@ import {
   toDate,
   weekday,
 } from '@tc/core';
+import { ActivityLine } from '@/components/activity';
 import { PageHeader } from '@/components/shell';
 import { Chip, Dot, Eyebrow, SourceBadge, cx } from '@/components/ui';
 import { useSessionsRange } from '@/lib/queries';
 import { SOURCES, useSessionView, useToday } from '@/lib/sessions';
 import { useStore, type SourceFilter } from '@/lib/store';
 
-const FILTERS: [SourceFilter, string][] = [['all', 'All'], ['coach', 'Coach'], ['me', 'You'], ['past', 'Repeat']];
+const FILTERS: [SourceFilter, string][] = [['all', 'All'], ['coach', 'Coach'], ['me', 'You'], ['past', 'Repeat'], ['import', 'Logged']];
 
 export default function CalendarPage() {
   const view = useStore((s) => s.views.calendar);
@@ -55,7 +56,7 @@ export default function CalendarPage() {
       <div className="flex flex-wrap items-start gap-5">
         <div className="flex min-w-0 flex-[3_1_560px] flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="eyebrow mr-1 !text-[11px] !text-faint">Planned by</span>
+            <span className="eyebrow mr-1 !text-[11px] !text-faint">Source</span>
             {FILTERS.map(([k, l]) => (
               <Chip key={k} active={srcFilter === k} onClick={() => set({ srcFilter: k })} className="!px-3 !py-1.5 !text-[13px]">
                 <Dot color={k === 'all' ? 'transparent' : SOURCES[k].color} size={7} />{l}
@@ -139,7 +140,8 @@ export default function CalendarPage() {
               </div>
               <div className="text-base font-semibold">{x.title}</div>
               <SourceBadge source={x.source} repeatedFrom={x.repeatedFrom} long className="self-start" />
-              {x.exs.length === 0 && <div className="text-[13px] leading-[1.45] text-muted">{x.durationMin} min · {x.note}</div>}
+              {x.exs.length === 0 && !x.activity && <div className="text-[13px] leading-[1.45] text-muted">{x.durationMin} min{x.note && ` · ${x.note}`}</div>}
+              {x.activity && <ActivityLine activity={x.activity} sport={x.sport} />}
               {x.exs.map((e) => (
                 <div key={e.n} className="flex justify-between gap-2.5 text-[13px]"><span className="text-ink-3">{e.name}</span><span className="whitespace-nowrap font-mono text-muted">{e.rx}</span></div>
               ))}

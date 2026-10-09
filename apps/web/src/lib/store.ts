@@ -10,6 +10,7 @@ import {
   startOfMonth,
   startOfWeek,
   type SessionExercise,
+  type PlannedSource,
   type SessionSource,
   type SportId,
 } from '@tc/core';
@@ -35,7 +36,7 @@ export type Draft = {
   dist: string;
   target: string;
   exercises: SessionExercise[];
-  source: SessionSource;
+  source: PlannedSource;
   repeatedFrom: string | null;
   /** Key of the past/coach plan this draft was loaded from. */
   pick: string | null;

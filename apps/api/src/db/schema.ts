@@ -148,7 +148,8 @@ export const athleteThreshold = pgTable('athlete_threshold', {
 // Planning
 // ---------------------------------------------------------------------------
 
-export const sessionSource = pgEnum('session_source', ['coach', 'me', 'past']);
+/** `import` = created from an imported activity that matched no planned session. */
+export const sessionSource = pgEnum('session_source', ['coach', 'me', 'past', 'import']);
 
 export const plannedSession = pgTable('planned_session', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -208,12 +209,64 @@ export const deviceConnection = pgTable('device_connection', {
   ...timestamps,
 }, (t) => [primaryKey({ columns: [t.athleteId, t.provider] })]);
 
+export const activityProvider = pgEnum('activity_provider', ['strava']);
+
+/** OAuth connection to an activity source. Tokens are AES-GCM encrypted (see src/crypto.ts). */
+export const integration = pgTable('integration', {
+  athleteId: uuid('athlete_id').notNull().references(() => athlete.id, { onDelete: 'cascade' }),
+  provider: activityProvider('provider').notNull(),
+  externalUserId: text('external_user_id').notNull(),
+  accessTokenEnc: text('access_token_enc').notNull(),
+  refreshTokenEnc: text('refresh_token_enc').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  connectedBy: text('connected_by').references(() => user.id, { onDelete: 'set null' }),
+  lastSyncAt: timestamp('last_sync_at', { withTimezone: true }),
+  lastError: text('last_error'),
+  ...timestamps,
+}, (t) => [
+  primaryKey({ columns: [t.athleteId, t.provider] }),
+  // One vendor account can feed only one athlete.
+  uniqueIndex('integration_external_user_idx').on(t.provider, t.externalUserId),
+]);
+
+/** A finished activity imported from a provider, in SI units. Linked to the session it fulfilled. */
+export const activity = pgTable('activity', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  athleteId: uuid('athlete_id').notNull().references(() => athlete.id, { onDelete: 'cascade' }),
+  provider: activityProvider('provider').notNull(),
+  externalId: text('external_id').notNull(),
+  sessionId: uuid('session_id').references(() => plannedSession.id, { onDelete: 'set null' }),
+  sportId: text('sport_id').notNull().references(() => sport.id),
+  name: text('name').notNull(),
+  startAt: timestamp('start_at', { withTimezone: true }).notNull(),
+  localDate: date('local_date').notNull(),
+  localTime: time('local_time').notNull(),
+  movingSec: integer('moving_sec').notNull(),
+  elapsedSec: integer('elapsed_sec').notNull(),
+  distanceM: doublePrecision('distance_m'),
+  elevationGainM: doublePrecision('elevation_gain_m'),
+  avgHr: doublePrecision('avg_hr'),
+  maxHr: doublePrecision('max_hr'),
+  avgWatts: doublePrecision('avg_watts'),
+  normalizedWatts: doublePrecision('normalized_watts'),
+  avgSpeed: doublePrecision('avg_speed'),
+  ...timestamps,
+}, (t) => [
+  uniqueIndex('activity_provider_external_idx').on(t.provider, t.externalId),
+  index('activity_athlete_date_idx').on(t.athleteId, t.localDate),
+  index('activity_session_idx').on(t.sessionId),
+]);
+
 // ---------------------------------------------------------------------------
 // Relations (for db.query)
 // ---------------------------------------------------------------------------
 
 export const plannedSessionRelations = relations(plannedSession, ({ many }) => ({
   exercises: many(sessionExercise),
+  activities: many(activity),
+}));
+export const activityRelations = relations(activity, ({ one }) => ({
+  session: one(plannedSession, { fields: [activity.sessionId], references: [plannedSession.id] }),
 }));
 export const sessionExerciseRelations = relations(sessionExercise, ({ one }) => ({
   session: one(plannedSession, { fields: [sessionExercise.sessionId], references: [plannedSession.id] }),

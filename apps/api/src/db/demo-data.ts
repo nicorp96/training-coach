@@ -5,7 +5,7 @@ import {
   weekday,
   type CreateSessionInput,
   type DeviceProvider,
-  type SessionSource,
+  type PlannedSource,
   type SportId,
   type ThresholdMetric,
 } from '@tc/core';
@@ -119,7 +119,7 @@ const WEEK_TEMPLATES: Record<ProfileId, Tpl[][]> = {
   ],
 };
 
-const WEEK_SOURCES: Record<ProfileId, SessionSource[][]> = {
+const WEEK_SOURCES: Record<ProfileId, PlannedSource[][]> = {
   lena: [['coach'], ['me'], ['coach', 'me'], ['past'], ['coach'], ['coach'], []],
   jonas: [['past'], ['past'], ['me', 'coach'], ['coach'], ['coach'], ['me'], ['me']],
   mia: [['me'], ['coach'], ['coach', 'me'], ['past'], ['me'], ['me'], []],

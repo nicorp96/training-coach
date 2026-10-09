@@ -1,10 +1,20 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { DEVICE_PROVIDERS, SPORTS, SPORT_IDS, type DeviceProvider } from '@tc/core';
 import { PageHeader } from '@/components/shell';
 import { Check, Switch, cx } from '@/components/ui';
-import { useAthlete, useDevices, useSetSports, useShareAccess, useUpdateDevice } from '@/lib/queries';
+import {
+  useAthlete,
+  useConnectStrava,
+  useDevices,
+  useDisconnectStrava,
+  useIntegrations,
+  useSetSports,
+  useShareAccess,
+  useSyncStrava,
+  useUpdateDevice,
+} from '@/lib/queries';
 import { useStore } from '@/lib/store';
 
 const OPTIONS = [
@@ -66,6 +76,8 @@ export default function SettingsPage() {
     <>
       <PageHeader screen="settings" eyebrow={athlete.name} title="Settings" />
       <div className="flex max-w-[1080px] flex-col gap-8">
+        <StravaSection canConnect={athlete.role === 'owner'} canSync={canEdit} />
+
         <section className="flex flex-col gap-3.5">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div className="flex flex-col gap-1">
@@ -126,7 +138,7 @@ export default function SettingsPage() {
               ))}
             </div>
           )}
-          <p className="text-[12.5px] text-faint">Device connections are simulated for now. Real Garmin, Wahoo and COROS sync needs partner API access (see PLAN.md).</p>
+          <p className="text-[12.5px] text-faint">Direct device connections are simulated for now: they need partner API access from Garmin, Wahoo and COROS. Until then, your watch syncs to Strava and Tempo imports from there.</p>
         </section>
 
         <section className="flex flex-col gap-3.5">
@@ -153,6 +165,73 @@ export default function SettingsPage() {
         {athlete.role === 'owner' && <ShareSection name={athlete.firstName} />}
       </div>
     </>
+  );
+}
+
+function StravaSection({ canConnect, canSync }: { canConnect: boolean; canSync: boolean }) {
+  const { data } = useIntegrations();
+  const connect = useConnectStrava();
+  const sync = useSyncStrava();
+  const disconnect = useDisconnectStrava();
+  const flash = useStore((s) => s.flash);
+  const st = data?.find((i) => i.provider === 'strava');
+
+  // Coming back from Strava's consent screen: /settings?strava=connected|error&msg=…
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const status = q.get('strava');
+    if (!status) return;
+    const msg = q.get('msg');
+    flash(status === 'connected' ? `Strava connected${msg ? ` · ${msg} activities imported` : ''}` : `Strava: ${msg ?? 'connection failed'}`);
+    window.history.replaceState(null, '', window.location.pathname);
+  }, [flash]);
+
+  if (!st) return null;
+  const onSync = () => sync.mutate(undefined, {
+    onSuccess: (r) => flash(r.imported ? `Imported ${r.imported} ${r.imported === 1 ? 'activity' : 'activities'} · ${r.matched} matched to your plan` : 'Up to date: no new activities'),
+    onError: (e) => flash(e.message),
+  });
+
+  return (
+    <section className="flex flex-col gap-3.5">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-[22px] font-semibold tracking-[-0.02em]">Strava</h2>
+        <span className="text-sm text-muted">Import finished runs, rides and workouts. Your watch syncs to Strava, Tempo reads from there. Read-only: nothing is posted to Strava.</span>
+      </div>
+      <div className="card flex flex-wrap items-center gap-x-5 gap-y-3.5 px-5 py-[18px]" style={st.connected ? { borderColor: 'var(--color-strava-line)' } : undefined}>
+        <span className="grid h-10 w-10 flex-none place-items-center rounded-[11px] bg-strava text-[17px] font-bold text-white">S</span>
+        <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-[3px]">
+          <span className="text-base font-semibold">{st.connected ? 'Connected to Strava' : 'Strava'}</span>
+          <span className="font-mono text-xs text-muted">
+            {!st.available ? 'Not set up on this server yet' : st.connected ? `${st.activityCount} activities · synced ${ago(st.lastSyncAt)}` : 'Not connected'}
+          </span>
+          {st.lastError && <span className="text-[12.5px] text-danger">{st.lastError}</span>}
+        </div>
+        {st.available && st.connected && (
+          <div className="flex flex-wrap gap-2">
+            {canSync && (
+              <button onClick={onSync} disabled={sync.isPending} className="rounded-[10px] border border-ink bg-ink px-4 py-2 text-[13.5px] font-semibold text-white disabled:opacity-60">
+                {sync.isPending ? 'Syncing…' : 'Sync now'}
+              </button>
+            )}
+            {canConnect && (
+              <button
+                onClick={() => disconnect.mutate(undefined, { onSuccess: () => flash('Strava disconnected. Imported activities stay in Tempo.') })}
+                className="rounded-[10px] border border-line-3 bg-surface px-4 py-2 text-[13.5px] font-semibold"
+              >
+                Disconnect
+              </button>
+            )}
+          </div>
+        )}
+        {st.available && !st.connected && canConnect && (
+          <button onClick={() => connect.mutate(undefined, { onError: (e) => flash(e.message) })} disabled={connect.isPending} className="rounded-[10px] bg-strava px-4 py-2 text-[13.5px] font-semibold text-white disabled:opacity-60">
+            Connect with Strava
+          </button>
+        )}
+        {!st.available && <p className="basis-full text-[12.5px] text-faint">Add STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET to the server’s .env (see README) to enable this.</p>}
+      </div>
+    </section>
   );
 }
 

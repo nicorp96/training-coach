@@ -233,7 +233,7 @@ Effort assumes solo dev + Claude Code, ~10–15 h/week. "w" = calendar weeks.
 - Calendar (month/week/day, DnD), Today view, mark done + feedback.
 - Goals + plan phases + multi-week plans.
 - Strength library + sessions + rule-based suggestions.
-- `.FIT` upload → activity → match to planned session.
+- ✅ Strava import (read-only) → activity → match to planned session. Open: `.FIT` upload as the vendor-independent fallback.
 - ✅ Milestone: you can plan, train and log a full week locally.
 
 ### Phase 2 — Analysis & adaptation (≈4–6 w)
