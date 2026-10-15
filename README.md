@@ -43,3 +43,14 @@ docs/           Architecture, hosting options, source design (Claude Design)
 
 `docker compose -f infra/docker-compose.prod.yml --env-file .env up -d --build` runs Postgres, API, web and Caddy.
 Set `POSTGRES_PASSWORD`, `APP_URL`, `BETTER_AUTH_SECRET`, `SITE_ADDRESS` and (recommended) `SIGNUP_ALLOWED_EMAILS` in `.env`.
+
+### Home server (Ubuntu + Tailscale)
+
+1. `sudo sh infra/homeserver-setup.sh <user>` installs Docker and Tailscale and keeps the machine awake with the lid closed. Then run `tailscale up`.
+2. Clone to `/opt/tempo` and create `.env` with:
+   - `APP_URL=https://<host>.<tailnet>.ts.net`
+   - `SITE_ADDRESS=:80`
+   - `HTTPS_PORT=127.0.0.1:8443`, which keeps port 443 free for Tailscale
+3. Start the stack (command above), then `tailscale serve --bg http://localhost:80` for private HTTPS.
+4. Nightly backup: add `0 3 * * * /opt/tempo/infra/backup.sh` to the crontab.
+5. Deploy updates: `git pull && docker compose -f infra/docker-compose.prod.yml --env-file .env up -d --build`.
