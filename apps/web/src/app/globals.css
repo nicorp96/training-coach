@@ -45,6 +45,24 @@ body {
   background: var(--color-canvas);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* No double-tap zoom delay on buttons and links. */
+a,
+button,
+label {
+  touch-action: manipulation;
+}
+
+/* iOS Safari zooms into any input under 16px on focus. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 input,

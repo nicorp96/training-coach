@@ -8,14 +8,34 @@ import { useActiveAthleteId, useMe } from '@/lib/queries';
 import { useStore, VIEWS, type Screen } from '@/lib/store';
 import { cx } from './ui';
 
-const NAV: { href: `/${Screen}`; label: string; short: string }[] = [
-  { href: '/today', label: 'Today', short: 'Today' },
-  { href: '/calendar', label: 'Calendar', short: 'Calendar' },
-  { href: '/builder', label: 'New training', short: 'New' },
-  { href: '/strength', label: 'Strength exercises', short: 'Strength' },
-  { href: '/profile', label: 'Profile & zones', short: 'Profile' },
-  { href: '/settings', label: 'Settings', short: 'Settings' },
+const NAV: { href: `/${Screen}`; label: string; short: string; icon: IconName }[] = [
+  { href: '/today', label: 'Today', short: 'Today', icon: 'today' },
+  { href: '/calendar', label: 'Calendar', short: 'Calendar', icon: 'calendar' },
+  { href: '/builder', label: 'New training', short: 'New', icon: 'plus' },
+  { href: '/strength', label: 'Strength exercises', short: 'Strength', icon: 'strength' },
+  { href: '/profile', label: 'Profile & zones', short: 'Profile', icon: 'profile' },
+  { href: '/settings', label: 'Settings', short: 'Settings', icon: 'settings' },
 ];
+// Phone tab bar: five targets; Settings sits behind the gear in the top bar.
+const TABS = NAV.filter((n) => n.href !== '/settings');
+
+type IconName = 'today' | 'calendar' | 'plus' | 'strength' | 'profile' | 'settings';
+const ICON_PATHS: Record<IconName, string> = {
+  today: 'M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
+  calendar: 'M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM4 10h16M8.5 3v4M15.5 3v4',
+  plus: 'M12 5v14M5 12h14',
+  strength: 'M3 9.5v5M6 7v10M18 7v10M21 9.5v5M6 12h12',
+  profile: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20a7.5 7.5 0 0 1 15 0',
+  settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+};
+
+function Icon({ name, size = 22, stroke = 1.8 }: { name: IconName; size?: number; stroke?: number }) {
+  return (
+    <svg aria-hidden width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">
+      <path d={ICON_PATHS[name]} />
+    </svg>
+  );
+}
 
 export function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -50,21 +70,39 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="relative mt-auto">{hydrated && <ProfileSwitcher />}</div>
       </aside>
 
-      <div className="flex items-center justify-between border-b border-line bg-rail px-4 py-3 md:hidden">
+      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-rail/95 px-4 pb-2.5 pt-[calc(env(safe-area-inset-top)+10px)] backdrop-blur md:hidden">
         <Logo />
-        {hydrated && <ProfileSwitcher compact />}
+        <div className="flex items-center gap-1.5">
+          <Link
+            href="/settings"
+            aria-label="Settings"
+            className={cx('grid h-10 w-10 place-items-center rounded-full', pathname.startsWith('/settings') ? 'bg-accent-soft text-accent' : 'text-muted')}
+          >
+            <Icon name="settings" size={21} />
+          </Link>
+          {hydrated && <ProfileSwitcher compact />}
+        </div>
       </div>
 
-      <main className="min-w-0 px-4 pb-28 pt-6 md:px-8 md:pb-14 md:pt-7">
+      <main className="min-w-0 px-4 pb-[calc(env(safe-area-inset-bottom)+96px)] pt-5 md:px-8 md:pb-14 md:pt-7">
         {hydrated ? children : me.isError && !unauthorized ? <LoadError onRetry={() => me.refetch()} /> : <Loading />}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-6 border-t border-line bg-rail pb-[env(safe-area-inset-bottom)] md:hidden">
-        {NAV.map((n) => {
+      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-line bg-rail/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        {TABS.map((n) => {
           const active = pathname.startsWith(n.href);
+          if (n.icon === 'plus') {
+            return (
+              <Link key={n.href} href={n.href} aria-label={n.label} className="flex flex-col items-center justify-center gap-1 py-1.5">
+                <span className={cx('grid h-11 w-11 place-items-center rounded-full text-white shadow-[0_4px_12px_rgba(92,107,36,.35)]', active ? 'bg-accent-ink' : 'bg-accent')}>
+                  <Icon name="plus" size={22} stroke={2.4} />
+                </span>
+              </Link>
+            );
+          }
           return (
-            <Link key={n.href} href={n.href} className={cx('flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium', active ? 'text-accent' : 'text-muted')}>
-              <span className="h-[3px] w-5 rounded-sm" style={{ background: active ? 'var(--color-accent)' : 'transparent' }} />
+            <Link key={n.href} href={n.href} className={cx('flex flex-col items-center gap-[3px] pb-1.5 pt-2 text-[10.5px] font-medium', active ? 'text-accent' : 'text-muted')}>
+              <Icon name={n.icon} size={23} stroke={active ? 2.1 : 1.7} />
               {n.short}
             </Link>
           );
@@ -110,8 +148,9 @@ function ProfileSwitcher({ compact }: { compact?: boolean }) {
 
   return (
     <div className="relative">
+      {open && <button aria-label="Close menu" className="fixed inset-0 z-10 cursor-default" onClick={() => setOpen(false)} />}
       {open && (
-        <div className={cx('absolute z-20 flex flex-col gap-0.5 rounded-[14px] border border-line-2 bg-surface p-1.5 shadow-[0_16px_40px_rgba(30,32,20,.14)]', compact ? 'right-0 top-12 w-64' : 'inset-x-0 bottom-16')}>
+        <div className={cx('absolute z-20 flex flex-col gap-0.5 rounded-[14px] border border-line-2 bg-surface p-1.5 shadow-[0_16px_40px_rgba(30,32,20,.14)]', compact ? 'right-0 top-12 w-[min(18rem,calc(100vw-2rem))]' : 'inset-x-0 bottom-16')}>
           <div className="eyebrow px-2.5 pb-1.5 pt-2 !text-[11px]">Switch profile</div>
           {me.athletes.map((p) => (
             <button
@@ -128,12 +167,13 @@ function ProfileSwitcher({ compact }: { compact?: boolean }) {
           ))}
           <div className="mt-1 border-t border-line pt-1">
             <div className="truncate px-2.5 py-1.5 text-xs text-muted">{me.user.email}</div>
+            <Link href="/settings" onClick={() => setOpen(false)} className="block w-full rounded-[10px] px-2.5 py-2 text-left text-sm text-ink-3 hover:bg-accent-soft">Settings</Link>
             <button onClick={signOut} className="w-full rounded-[10px] px-2.5 py-2 text-left text-sm text-ink-3 hover:bg-accent-soft">Sign out</button>
           </div>
         </div>
       )}
       {compact ? (
-        <button onClick={() => setOpen((o) => !o)} aria-label="Switch profile">
+        <button onClick={() => setOpen((o) => !o)} aria-label="Switch profile" className="grid h-10 w-10 place-items-center">
           <Avatar initials={P.initials} color={P.color} size={34} />
         </button>
       ) : (
@@ -169,7 +209,7 @@ function Toast() {
   const set = useStore((s) => s.set);
   if (!toast) return null;
   return (
-    <div role="status" className="fixed bottom-20 left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-xl bg-ink py-3 pl-[18px] pr-3.5 text-sm font-medium text-white shadow-[0_16px_40px_rgba(30,32,20,.2)] md:bottom-7">
+    <div role="status" className="fixed bottom-[calc(env(safe-area-inset-bottom)+84px)] left-1/2 z-30 max-w-[calc(100vw-2rem)] flex -translate-x-1/2 items-center gap-4 rounded-xl bg-ink py-3 pl-[18px] pr-3.5 text-sm font-medium text-white shadow-[0_16px_40px_rgba(30,32,20,.2)] md:bottom-7">
       <span>{toast.msg}</span>
       {toast.action && (
         <button onClick={() => { toast.onAction?.(); set({ toast: null }); }} className="rounded-lg bg-white px-2.5 py-1.5 text-[13px] font-semibold text-accent">
@@ -186,20 +226,20 @@ export function PageHeader<K extends Screen>({ screen, eyebrow, title }: { scree
   const router = useRouter();
 
   return (
-    <header className="mb-7 flex flex-wrap items-end justify-between gap-5">
+    <header className="mb-5 flex flex-wrap items-end justify-between gap-x-5 gap-y-3.5 md:mb-7">
       <div className="min-w-0">
         <div className="eyebrow !text-xs">{eyebrow}</div>
         <h1 className="mt-1.5 text-[28px] font-semibold leading-[1.1] tracking-[-0.03em] md:text-4xl">{title}</h1>
       </div>
       <div className="flex flex-wrap items-center gap-3.5">
         <div className="flex items-center gap-2">
-          <span className="eyebrow !text-[11px] !text-faint">Layout</span>
+          <span className="eyebrow hidden !text-[11px] !text-faint md:inline">Layout</span>
           <div className="flex gap-0.5 rounded-[10px] border border-line bg-surface-2 p-[3px]">
             {VIEWS[screen].map((v) => (
               <button
                 key={v}
                 onClick={() => setView(screen, v as never)}
-                className={cx('rounded-[7px] px-[11px] py-1.5 text-[13px] font-medium', view === v ? 'bg-ink text-white' : 'text-muted hover:text-ink')}
+                className={cx('rounded-[7px] px-3 py-2 text-[13px] font-medium md:px-[11px] md:py-1.5', view === v ? 'bg-ink text-white' : 'text-muted hover:text-ink')}
               >
                 {v}
               </button>
@@ -207,7 +247,7 @@ export function PageHeader<K extends Screen>({ screen, eyebrow, title }: { scree
           </div>
         </div>
         {screen !== 'builder' && (
-          <button onClick={() => router.push('/builder')} className="rounded-[10px] bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover">
+          <button onClick={() => router.push('/builder')} className="hidden rounded-[10px] bg-accent md:block px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover">
             + New training
           </button>
         )}

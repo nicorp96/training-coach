@@ -134,7 +134,7 @@ function Profile({ athlete }: { athlete: AthleteDto }) {
             ))}
           </div>
           {canEdit && (
-            <div className="flex flex-wrap items-center gap-3">
+            <div className={cx('flex flex-wrap items-center gap-3', dirty && 'sticky bottom-[calc(env(safe-area-inset-bottom)+76px)] z-10 -mx-4 border-t border-line bg-canvas/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0')}>
               <button disabled={!dirty || !!invalid.length || update.isPending} className="rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50">
                 {update.isPending ? 'Saving…' : 'Save profile'}
               </button>

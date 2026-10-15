@@ -326,7 +326,7 @@ function GuidedBuilder() {
         {['Details', 'Exercises', 'Review'].map((l, i) => (
           <button key={l} onClick={() => s.set({ step: (i + 1) as 1 | 2 | 3 })} className={cx('flex flex-col gap-2 text-left', i + 1 === step ? 'text-ink' : 'text-muted')}>
             <span className="h-1 rounded-sm" style={{ background: i + 1 <= step ? 'var(--color-accent)' : 'var(--color-line)' }} />
-            <span className="font-mono text-xs uppercase tracking-[.06em]">0{i + 1} · {l}</span>
+            <span className="font-mono text-xs uppercase tracking-[.06em]"><span className="hidden md:inline">0{i + 1} · </span>{l}</span>
           </button>
         ))}
       </div>
@@ -339,11 +339,11 @@ function GuidedBuilder() {
             </label>
             <div className="flex flex-col gap-2">
               <span className="text-[15px] text-muted">What kind of training?</span>
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2.5">
+              <div className="grid grid-cols-2 gap-2.5 md:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
                 {sportOpts.map((k) => {
                   const T = SPORTS[k], a = d.sport === k;
                   return (
-                    <button key={k} onClick={() => s.updateDraft({ sport: k })} className={cx('flex min-h-[120px] flex-col gap-[22px] rounded-[14px] p-4 text-left', a && 'bg-accent-soft')} style={{ border: `1.5px solid ${a ? T.color : 'var(--color-line-2)'}` }}>
+                    <button key={k} onClick={() => s.updateDraft({ sport: k })} className={cx('flex min-h-[96px] flex-col gap-3.5 rounded-[14px] p-3.5 text-left md:min-h-[120px] md:gap-[22px] md:p-4', a && 'bg-accent-soft')} style={{ border: `1.5px solid ${a ? T.color : 'var(--color-line-2)'}` }}>
                       <Dot color={T.color} size={12} />
                       <span className="flex flex-col gap-[3px]"><span className="text-base font-semibold">{T.label}</span><span className="text-[12.5px] text-muted">{T.description}</span></span>
                     </button>

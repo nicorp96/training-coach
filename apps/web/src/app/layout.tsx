@@ -13,7 +13,8 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: 'Tempo', statusBarStyle: 'default' },
 };
 
-export const viewport: Viewport = { themeColor: '#F6F6F1' };
+// viewportFit 'cover' makes env(safe-area-inset-*) work on notched iPhones.
+export const viewport: Viewport = { themeColor: '#F0F0E8', width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
