@@ -3,5 +3,5 @@
 set -eu
 cd "$(dirname "$0")"
 mkdir -p ../backups
-docker compose -f docker-compose.prod.yml exec -T postgres pg_dump -U coach -Fc training_coach > "../backups/tempo-$(date +%F).dump"
+docker compose -f docker-compose.prod.yml --env-file ../.env exec -T postgres pg_dump -U coach -Fc training_coach > "../backups/tempo-$(date +%F).dump"
 find ../backups -name 'tempo-*.dump' -mtime +14 -delete
